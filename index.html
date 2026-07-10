@@ -2453,13 +2453,41 @@ function saveSignatureConfig(){ saveState(); showToast('Signature lines saved.',
 /* ============================================================
    SUPABASE SYNC
    ============================================================ */
+/* Fill these in once you've created your free Supabase project, so every
+   visitor to this hosted link automatically connects to the SAME shared
+   dataset — no per-visitor setup needed. Anon keys are safe to expose in
+   client-side code; that's what they're designed for (protect writes with
+   Row Level Security policies in Supabase, not by hiding this key). */
+const DEFAULT_SUPABASE_URL = 'https://zybvdhoozwnollgrpsxb.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5YnZkaG9vendub2xsZ3Jwc3hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2OTk1NjYsImV4cCI6MjA5OTI3NTU2Nn0.H8Wl-BbDNg7Ln8BJ36Mszm4InIuw-D4g0D9TQL_NL4Y';
+
 function updateCloudStatus(connected){ document.getElementById('cloudDot').classList.toggle('on', connected); document.getElementById('cloudStatusText').textContent = connected ? 'Cloud: Connected' : 'Cloud: Not Connected'; }
 function initSupabase(){
-  const url = localStorage.getItem('sms_sb_url'), key = localStorage.getItem('sms_sb_key');
+  const url = localStorage.getItem('sms_sb_url') || DEFAULT_SUPABASE_URL;
+  const key = localStorage.getItem('sms_sb_key') || DEFAULT_SUPABASE_KEY;
   if(url && key && window.supabase){
-    try{ supabaseClient = window.supabase.createClient(url, key); updateCloudStatus(true); document.getElementById('sbUrl').value=url; document.getElementById('sbKey').value=key; }
+    try{
+      supabaseClient = window.supabase.createClient(url, key);
+      updateCloudStatus(true);
+      document.getElementById('sbUrl').value=url; document.getElementById('sbKey').value=key;
+      autoPullOnLoad();
+    }
     catch(e){ supabaseClient=null; updateCloudStatus(false); }
   } else { updateCloudStatus(false); }
+}
+async function autoPullOnLoad(){
+  if(!supabaseClient) return;
+  try{
+    const { data, error } = await supabaseClient.from('sms_students').select('*').eq('id',1).maybeSingle();
+    if(error || !data || !data.data) return; // nothing pushed yet — stay on whatever's local, no error shown
+    appState.students = JSON.parse(data.data);
+    const sessSet = new Set(appState.students.map(s=>s.session).filter(Boolean));
+    sessSet.forEach(s=>{ if(!appState.sessionsList.includes(s)) appState.sessionsList.push(s); });
+    saveState();
+    if(typeof renderDataPreview==='function' && document.getElementById('dataPreviewTableWrap')) renderDataPreview();
+    if(typeof renderDashboard==='function' && document.getElementById('dashStatCards')) renderDashboard();
+    if(typeof populateSessionSwitcher==='function') populateSessionSwitcher();
+  }catch(e){ /* silent — first load before anything has ever been pushed */ }
 }
 function saveSupabaseConfig(){
   const url = document.getElementById('sbUrl').value.trim(), key = document.getElementById('sbKey').value.trim();
