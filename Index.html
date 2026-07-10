@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Management System — Live Enterprise Cloud Portal</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+:root{
+  --navy-1:#0A1F33; --navy-2:#0F2E4C; --navy-3:#123A5C;
+  --teal:#0E9594; --teal-light:#17B3AC; --teal-pale:#E4F5F4;
+  --bg:#F0F5F8; --card:#FFFFFF; --ink:#152436; --muted:#63788C; --line:#DCE7ED;
+  --success:#1F9D55; --success-bg:#E7F7EE; --warning:#C98A02; --warning-bg:#FCF3DD;
+  --danger:#C6423D; --danger-bg:#FBE9E8; --gold:#C99A2E; --silver:#8C97A3; --bronze:#B5713D;
+  --radius:10px;
+  --shadow:0 2px 10px rgba(15,46,76,.06), 0 1px 2px rgba(15,46,76,.08);
+  --shadow-lg:0 12px 32px rgba(10,31,51,.14);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:'Sora',system-ui,sans-serif;margin:0;}
+.mono{font-family:'JetBrains Mono',monospace;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+a{color:inherit;}
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-thumb{background:#c4d3dc;border-radius:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+.hidden{display:none !important;}
+
+/* ---------- Login ---------- */
+#loginOverlay{position:fixed;inset:0;z-index:500;display:flex;background:var(--navy-1);}
+.login-brand{flex:1.1;position:relative;background:linear-gradient(160deg,var(--navy-1) 0%,var(--navy-3) 55%,var(--teal) 130%);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:60px 64px;overflow:hidden;}
+.login-brand::before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(180deg, rgba(255,255,255,.055) 0px, rgba(255,255,255,.055) 1px, transparent 1px, transparent 40px);}
+.login-brand .cap-watermark{position:absolute;right:-60px;bottom:-60px;width:420px;height:420px;opacity:.10;pointer-events:none;}
+.brand-eyebrow{font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.14em;color:var(--teal-light);text-transform:uppercase;margin-bottom:18px;position:relative;z-index:1;}
+.brand-title{font-size:40px;line-height:1.14;font-weight:700;max-width:520px;position:relative;z-index:1;}
+.brand-sub{margin-top:16px;color:#B9CADA;font-size:15px;max-width:440px;line-height:1.6;position:relative;z-index:1;}
+.brand-stats{display:flex;gap:34px;margin-top:44px;position:relative;z-index:1;}
+.brand-stats div b{display:block;font-size:22px;font-family:'Sora';}
+.brand-stats div span{font-size:12px;color:#9FB4C6;text-transform:uppercase;letter-spacing:.06em;}
+.login-panel{width:460px;flex-shrink:0;background:#0C2540;display:flex;flex-direction:column;padding:52px 46px;color:#fff;}
+.role-tabs{display:flex;gap:8px;margin-bottom:30px;background:rgba(255,255,255,.06);padding:5px;border-radius:12px;}
+.role-tab{flex:1;padding:11px 6px;text-align:center;border-radius:9px;border:none;background:transparent;color:#9FB4C6;font-size:12.5px;font-weight:600;letter-spacing:.02em;transition:.15s;}
+.role-tab.active{background:var(--teal);color:#04211f;box-shadow:var(--shadow);}
+.login-form h2{color:#fff;font-size:21px;margin-bottom:4px;}
+.login-form p.help{color:#8FA3B6;font-size:13px;margin:0 0 26px;line-height:1.5;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12.5px;color:#AEC0D0;margin-bottom:6px;font-weight:600;letter-spacing:.01em;}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;font-size:14px;outline:none;transition:.15s;}
+.field input::placeholder{color:#6E85999e;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal-light);background:rgba(255,255,255,.1);}
+.btn{border:none;border-radius:8px;padding:12px 18px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.15s;}
+.btn-primary{background:var(--teal);color:#04211f;width:100%;margin-top:6px;}
+.btn-primary:hover{background:var(--teal-light);}
+.login-error{background:rgba(198,66,61,.18);border:1px solid rgba(198,66,61,.4);color:#ffb4b0;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;}
+.demo-note{margin-top:20px;font-size:11.5px;color:#6E859C;line-height:1.6;border-top:1px solid rgba(255,255,255,.08);padding-top:16px;}
+
+/* ---------- App shell ---------- */
+#appShell{display:flex;height:100vh;width:100vw;overflow:hidden;}
+.sidebar{width:250px;flex-shrink:0;background:linear-gradient(190deg,var(--navy-1),var(--navy-2) 70%);color:#fff;display:flex;flex-direction:column;padding:22px 16px;}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 22px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px;}
+.sidebar-brand img{width:34px;height:34px;border-radius:8px;object-fit:cover;background:#fff;}
+.sidebar-brand .logo-fallback{width:34px;height:34px;border-radius:8px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-family:'Sora';font-weight:700;color:#04211f;font-size:14px;flex-shrink:0;}
+.sidebar-brand .name{font-family:'Sora';font-weight:700;font-size:14.5px;line-height:1.25;}
+.sidebar-brand .name small{display:block;font-family:'Inter';font-weight:500;font-size:10.5px;color:#8FA3B6;text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+.nav-group-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:#5E7488;padding:14px 10px 6px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:#B9CADA;font-size:13.6px;font-weight:500;margin-bottom:2px;border:none;background:transparent;width:100%;text-align:left;transition:.12s;}
+.nav-item svg{width:17px;height:17px;flex-shrink:0;}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff;}
+.nav-item.active{background:var(--teal);color:#04211f;font-weight:700;}
+.sidebar-foot{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);}
+.cloud-pill{display:flex;align-items:center;gap:8px;font-size:12px;color:#B9CADA;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.05);margin-bottom:8px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--danger);flex-shrink:0;}
+.dot.on{background:var(--success);box-shadow:0 0 0 3px rgba(31,157,85,.2);animation:pulse 2s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,157,85,.4);}70%{box-shadow:0 0 0 6px rgba(31,157,85,0);}100%{box-shadow:0 0 0 0 rgba(31,157,85,0);}}
+.foot-btn{width:100%;text-align:left;background:transparent;border:none;color:#B9CADA;font-size:12.8px;padding:8px 10px;border-radius:8px;display:flex;align-items:center;gap:9px;}
+.foot-btn:hover{background:rgba(255,255,255,.06);color:#fff;}
+.foot-btn.logout{color:#f0b3b0;}
+.workspace{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 30px;border-bottom:1px solid var(--line);background:#fff;gap:16px;}
+.topbar h1{font-size:19.5px;}
+.topbar .crumb{font-size:12.5px;color:var(--muted);margin-top:3px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.session-select{padding:8px 12px;border-radius:8px;border:1.4px solid var(--line);background:var(--teal-pale);color:#07615f;font-weight:700;font-size:12.8px;outline:none;}
+.role-badge{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:20px;background:var(--teal-pale);color:#07615f;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.panels{flex:1;overflow-y:auto;padding:26px 30px 60px;}
+.panel{display:none;max-width:1300px;margin:0 auto;}
+.panel.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);margin-bottom:20px;}
+.card h3{font-size:15.5px;margin-bottom:4px;}
+.card .card-desc{font-size:12.8px;color:var(--muted);margin-bottom:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}.grid-4{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.grid-4{grid-template-columns:1fr;}}
+
+/* ===================== MOBILE RESPONSIVE PASS ===================== */
+.hamburger-btn{display:none;background:none;border:none;font-size:21px;line-height:1;color:var(--ink);cursor:pointer;padding:6px 8px;border-radius:8px;flex-shrink:0;}
+.hamburger-btn:hover{background:#F0F5F8;}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(10,31,51,.5);z-index:399;}
+.sidebar-backdrop.open{display:block;}
+
+@media(max-width:860px){
+  #appShell{position:relative;overflow:hidden;}
+  .hamburger-btn{display:inline-flex;align-items:center;justify-content:center;}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:270px;max-width:82vw;z-index:400;
+    transform:translateX(-104%);transition:transform .22s ease;box-shadow:none;}
+  .sidebar.open{transform:translateX(0);box-shadow:0 12px 40px rgba(0,0,0,.35);}
+  .workspace{width:100%;min-width:0;}
+  .topbar{padding:14px 16px;}
+  .topbar h1{font-size:16.5px;}
+  .panels{padding:16px 14px 50px;}
+  .card{padding:16px;}
+  .role-badge{display:none;}
+}
+@media(max-width:520px){
+  .brand-stats{flex-wrap:wrap;gap:18px;}
+  .login-brand{padding:34px 22px;}
+  .login-brand .brand-title{font-size:26px;}
+  .login-panel{padding:28px 20px;}
+  .stat-card .stat-val{font-size:22px;}
+  .podium{flex-wrap:wrap;}
+  .podium-slot{flex:1 1 100%;}
+  .doc-sheet{padding:20px 16px !important;}
+}
+@media(max-width:760px){
+  #loginOverlay{flex-direction:column;overflow-y:auto;height:auto;min-height:100vh;}
+  .login-brand{flex:none;}
+  .login-brand .cap-watermark{width:200px;height:200px;right:-40px;bottom:-40px;}
+  .login-panel{width:100%;flex:none;}
+}
+@media(max-width:820px){
+  #reportPreviewArea, #meritPreviewArea, #tcPreviewArea{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
+  #reportPreviewArea .doc-sheet, #tcPreviewArea .doc-sheet{min-width:600px;}
+  #meritPreviewArea .doc-sheet{min-width:700px;}
+}
+@media(max-width:640px){
+  .btn-row{gap:8px;}
+  .btn{font-size:13px;padding:11px 15px;}
+  .card h3{font-size:14.5px;}
+  table.data-table{font-size:12.4px;}
+}
+.field-light label{display:block;font-size:12.3px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.field-light input,.field-light select,.field-light textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:#F8FBFC;font-size:13.6px;outline:none;color:var(--ink);}
+.field-light input:focus,.field-light select:focus,.field-light textarea:focus{border-color:var(--teal);background:#fff;}
+.field-light{margin-bottom:14px;}
+.btn-teal{background:var(--teal);color:#fff;}
+.btn-teal:hover{background:#0b7f7e;}
+.btn-outline{background:#fff;border:1.4px solid var(--line);color:var(--ink);}
+.btn-outline:hover{border-color:var(--teal);color:var(--teal);}
+.btn-navy{background:var(--navy-2);color:#fff;}
+.btn-navy:hover{background:var(--navy-1);}
+.btn-sm{padding:8px 13px;font-size:12.8px;border-radius:7px;}
+.btn-xs{padding:5px 9px;font-size:11.8px;border-radius:6px;}
+.btn-danger{background:var(--danger-bg);color:var(--danger);}
+.btn[disabled]{opacity:.45;cursor:not-allowed;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+.stat-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.stat-card .stat-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.stat-card .stat-val{font-family:'Sora';font-size:26px;font-weight:700;}
+.stat-card .stat-label{font-size:12px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+.podium{display:flex;gap:14px;align-items:flex-end;margin-top:6px;}
+.podium-slot{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;text-align:center;box-shadow:var(--shadow);}
+.podium-slot.first{border-top:4px solid var(--gold);}
+.podium-slot.second{border-top:4px solid var(--silver);}
+.podium-slot.third{border-top:4px solid var(--bronze);}
+.podium-rank{font-family:'Sora';font-weight:800;font-size:22px;}
+.podium-slot.first .podium-rank{color:var(--gold);}
+.podium-slot.second .podium-rank{color:var(--silver);}
+.podium-slot.third .podium-rank{color:var(--bronze);}
+.podium-name{font-weight:700;margin-top:6px;font-size:14px;}
+.podium-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.class-bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;font-size:13px;}
+.class-bar-row .lbl{width:120px;flex-shrink:0;color:var(--ink);font-weight:600;}
+.class-bar-track{flex:1;background:#EBF2F5;border-radius:6px;height:10px;overflow:hidden;}
+.class-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-light));border-radius:6px;}
+.class-bar-count{width:34px;text-align:right;color:var(--muted);font-size:12px;}
+.dropzone{border:2px dashed var(--line);border-radius:10px;padding:28px;text-align:center;background:#F8FBFC;cursor:pointer;transition:.15s;}
+.dropzone:hover,.dropzone.drag{border-color:var(--teal);background:var(--teal-pale);}
+.dropzone svg{width:30px;height:30px;color:var(--teal);margin-bottom:8px;}
+.dropzone .dz-title{font-weight:600;font-size:13.6px;}
+.dropzone .dz-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+table.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.data-table th{text-align:left;background:#F3F8F9;color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;padding:9px 10px;border-bottom:2px solid var(--line);}
+table.data-table td{padding:9px 10px;border-bottom:1px solid var(--line);}
+table.data-table tr:hover td{background:#FAFDFD;}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.8px;font-weight:700;margin-right:4px;}
+.chip.on{background:var(--success-bg);color:var(--success);}
+.chip.off{background:#EEF1F3;color:#9AA7B2;}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--teal-pale);color:#07615f;font-weight:600;}
+.toast-wrap{position:fixed;top:20px;right:20px;z-index:900;display:flex;flex-direction:column;gap:10px;}
+.toast{background:var(--navy-2);color:#fff;padding:12px 16px;border-radius:9px;font-size:13.4px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;min-width:220px;animation:slideIn .2s ease;}
+.toast.error{background:var(--danger);}
+.toast.success{background:var(--success);}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.upload-row{display:flex;align-items:center;gap:14px;padding:12px;border:1px solid var(--line);border-radius:9px;margin-bottom:12px;background:#FAFCFD;}
+.upload-thumb{width:56px;height:56px;border-radius:8px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+.upload-thumb img{width:100%;height:100%;object-fit:contain;}
+.upload-info{flex:1;}
+.upload-info b{font-size:13.4px;display:block;}
+.upload-info span{font-size:11.8px;color:var(--muted);}
+.rule-row{display:grid;grid-template-columns:110px 1fr 40px;gap:10px;align-items:center;margin-bottom:8px;}
+.rule-row input{padding:8px 10px;border-radius:7px;border:1px solid var(--line);font-size:13px;}
+.session-row{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:8px;background:#FAFCFD;}
+.session-row.active-row{border-color:var(--teal);background:var(--teal-pale);}
+.session-row b{font-size:13.6px;}
+.session-row span{font-size:11.8px;color:var(--muted);}
+
+/* ---------- Documents ---------- */
+.doc-sheet{background:#fff;border:1px solid var(--line);border-radius:8px;padding:36px 40px;position:relative;overflow:hidden;max-width:860px;margin:0 auto 26px;box-shadow:var(--shadow);}
+.doc-sheet .doc-ledger-bg{position:absolute;inset:0;pointer-events:none;background-image:repeating-linear-gradient(180deg, rgba(14,149,148,.05) 0px, rgba(14,149,148,.05) 1px, transparent 1px, transparent 30px);}
+.doc-watermark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.07;pointer-events:none;z-index:0;}
+.doc-watermark img{width:56%;max-width:340px;}
+.doc-head{display:flex;align-items:center;gap:16px;border-bottom:3px solid var(--teal);padding-bottom:16px;margin-bottom:18px;position:relative;z-index:1;}
+.doc-head img.doc-logo{width:58px;height:58px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid var(--line);}
+.doc-head .doc-school-name{font-family:'Sora';font-size:21px;font-weight:800;color:var(--navy-1);}
+.doc-head .doc-school-sub{font-size:11.8px;color:var(--muted);margin-top:2px;}
+.doc-title-bar{text-align:center;background:var(--navy-1);color:#fff;padding:8px;border-radius:6px;font-family:'Sora';font-weight:700;letter-spacing:.05em;font-size:13.5px;text-transform:uppercase;margin-bottom:18px;position:relative;z-index:1;}
+.doc-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 20px;font-size:12.6px;margin-bottom:18px;position:relative;z-index:1;}
+.doc-info-grid div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:4px 0;}
+.doc-info-grid div b{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.02em;}
+.doc-section-title{font-family:'Sora';font-size:12.5px;font-weight:700;color:var(--navy-1);text-transform:uppercase;letter-spacing:.04em;margin:20px 0 10px;position:relative;z-index:1;border-left:4px solid var(--teal);padding-left:8px;}
+table.doc-table{width:100%;border-collapse:collapse;font-size:12.6px;position:relative;z-index:1;margin-bottom:6px;}
+table.doc-table th{background:var(--navy-1);color:#fff;padding:7px 8px;font-size:10.6px;text-transform:uppercase;letter-spacing:.03em;text-align:left;}
+table.doc-table td{padding:6px 8px;border-bottom:1px solid var(--line);}
+table.doc-table tr:nth-child(even) td{background:#F7FBFB;}
+table.doc-table tfoot td{font-weight:700;background:var(--teal-pale) !important;border-top:2px solid var(--teal);}
+.doc-summary-row{display:flex;gap:12px;margin:18px 0 6px;position:relative;z-index:1;}
+.doc-summary-box{flex:1;text-align:center;background:#F7FBFB;border:1px solid var(--line);border-radius:8px;padding:11px 6px;}
+.doc-summary-box b{display:block;font-family:'Sora';font-size:17px;color:var(--navy-1);}
+.doc-summary-box span{font-size:10.3px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+.doc-remarks{font-size:12.4px;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px;margin:14px 0;position:relative;z-index:1;}
+.doc-attendance{font-size:12.6px;color:var(--ink);margin:14px 0;position:relative;z-index:1;}
+.doc-attendance b{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.02em;margin-right:6px;}
+.doc-attendance-pct{font-size:12.6px;color:var(--ink);margin:12px 0 6px;position:relative;z-index:1;}
+.doc-attendance-pct b{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.02em;margin-right:6px;}
+.doc-sign-row{display:flex;justify-content:space-between;gap:20px;position:relative;z-index:1;margin-top:30px;}
+.doc-sign-box{flex:1;text-align:center;}
+.doc-sign-box img{height:38px;object-fit:contain;margin-bottom:4px;}
+.doc-sign-line{border-top:1.4px solid var(--ink);margin-top:32px;padding-top:6px;font-size:11px;color:var(--muted);font-weight:600;}
+.doc-sign-box.has-img .doc-sign-line{margin-top:4px;}
+.doc-foot-note{text-align:center;font-size:10.4px;color:#9AA7B2;margin-top:20px;position:relative;z-index:1;}
+/* Compact mode — used automatically on A5 so a full result card fits on one page */
+.doc-sheet.doc-compact{padding:14px 16px;line-height:1.25;}
+.doc-sheet.doc-compact .doc-head{gap:8px;padding-bottom:8px;margin-bottom:8px;}
+.doc-sheet.doc-compact .doc-logo{width:32px;height:32px;}
+.doc-sheet.doc-compact .doc-school-name{font-size:13px;}
+.doc-sheet.doc-compact .doc-school-sub{font-size:8.5px;}
+.doc-sheet.doc-compact .doc-title-bar{padding:4px;font-size:9.5px;margin-bottom:8px;}
+.doc-sheet.doc-compact .doc-info-table{font-size:8.8px;margin-bottom:8px;}
+.doc-sheet.doc-compact .doc-info-table th,.doc-sheet.doc-compact .doc-info-table td{padding:3px 6px;}
+.doc-sheet.doc-compact .doc-info-grid{gap:3px 16px;font-size:9.5px;margin-bottom:8px;}
+.doc-sheet.doc-compact .doc-info-grid div{padding:2px 0;}
+.doc-sheet.doc-compact table.doc-table{font-size:8.8px;margin-bottom:6px;}
+.doc-sheet.doc-compact table.doc-table th,.doc-sheet.doc-compact table.doc-table td{padding:3px 5px;}
+.doc-sheet.doc-compact .doc-section-title{font-size:9px;margin:8px 0 5px;}
+.doc-sheet.doc-compact .doc-summary-row{gap:6px;margin-bottom:8px;}
+.doc-sheet.doc-compact .doc-summary-box{padding:5px;}
+.doc-sheet.doc-compact .doc-summary-box b{font-size:12px;}
+.doc-sheet.doc-compact .doc-summary-box span{font-size:8.5px;}
+.doc-sheet.doc-compact .doc-remarks{font-size:9px;padding-top:5px;margin-bottom:10px;}
+.doc-sheet.doc-compact .doc-sign-row{margin-top:14px;}
+.doc-sheet.doc-compact .doc-sign-box img{height:26px;}
+.doc-sheet.doc-compact .doc-sign-line{margin-top:16px;font-size:8.8px;padding-top:4px;}
+.doc-sheet.doc-compact .doc-attendance{font-size:9px;margin:6px 0;}
+.doc-sheet.doc-compact .doc-attendance-pct{font-size:9px;margin:6px 0 4px;}
+.doc-sheet.doc-compact .doc-foot-note{font-size:8px;margin-top:8px;}
+.pdf-page{page-break-after:always;}
+.pdf-page:last-child{page-break-after:auto;}
+.legend-note{font-size:11.8px;color:var(--muted);background:#F3F8F9;border-radius:8px;padding:10px 12px;margin-bottom:16px;line-height:1.55;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.class-register-block{border:1px solid var(--line);border-radius:10px;margin-bottom:12px;background:#fff;overflow:hidden;}
+.class-register-summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;background:#FAFCFD;}
+.class-register-summary::-webkit-details-marker{display:none;}
+.class-register-summary .crs-name{font-family:'Sora';font-weight:700;font-size:14.5px;}
+.class-register-summary .crs-meta{font-size:12px;color:var(--muted);flex:1;text-align:right;}
+.class-register-summary .crs-arrow{color:var(--teal);transition:.15s;font-size:13px;}
+details[open] .class-register-summary .crs-arrow{transform:rotate(90deg);}
+.class-register-body{padding:16px 18px;border-top:1px solid var(--line);}
+.reg-input{width:100%;padding:6px 7px;border:1px solid var(--line);border-radius:6px;font-size:12.6px;background:#F8FBFC;}
+.reg-input:focus{border-color:var(--teal);background:#fff;outline:none;}
+table.doc-info-table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12.6px;position:relative;z-index:1;}
+table.doc-info-table th{background:var(--teal-pale);color:#07615f;text-align:left;font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:10.6px;padding:8px 12px;border:1px solid var(--line);width:16%;white-space:nowrap;}
+table.doc-info-table td{padding:8px 12px;border:1px solid var(--line);font-weight:600;color:var(--ink);width:34%;}
+.empty-state svg{width:38px;height:38px;color:#c7d5dd;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN OVERLAY ===================== -->
+<div id="loginOverlay">
+  <div class="login-brand">
+    <div class="cap-watermark">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 1 8l11 6 9-4.91V17h2V8L12 2zM5 13.18v4.09c0 1 1.5 3.73 7 3.73s7-2.73 7-3.73v-4.09L12 16.5 5 13.18z"/></svg>
+    </div>
+    <div class="brand-eyebrow">// Live Enterprise Cloud Portal</div>
+    <div class="brand-title">School Management System</div>
+    <p class="brand-sub">One ledger for every term and every session. Upload class CSVs, generate comprehensive report cards and merit registers, and issue transfer certificates — synced live to the cloud via Supabase.</p>
+    <div class="brand-stats">
+      <div><b id="brandStatStudents">0</b><span>Enrolled</span></div>
+      <div><b id="brandStatClasses">0</b><span>Classes</span></div>
+      <div><b id="brandStatSessions">1</b><span>Sessions</span></div>
+    </div>
+  </div>
+  <div class="login-panel">
+    <div class="role-tabs">
+      <button class="role-tab active" id="tabAdmin" onclick="switchLoginTab('admin')">Administrator Desk</button>
+      <button class="role-tab" id="tabStudent" onclick="switchLoginTab('student')">Student / Parent Portal</button>
+    </div>
+    <div id="loginErrorBox" class="login-error hidden"></div>
+    <form id="adminLoginForm" class="login-form" onsubmit="return handleAdminLogin(event)">
+      <h2>Authorized Administrator Desk</h2>
+      <p class="help">Sign in to manage CSV ingestion, report cards, merit registers, transfer certificates and cloud sync.</p>
+      <div class="field"><label>Username</label><input id="adminUser" placeholder="admin" autocomplete="username" required></div>
+      <div class="field"><label>Password</label><input id="adminPass" type="password" placeholder="••••••••" autocomplete="current-password" required></div>
+      <button class="btn btn-primary" type="submit">Enter Administrator Desk →</button>
+      <div class="demo-note">Default demo credentials: <b class="mono">admin / admin123</b>. This is a client-side prototype login — replace with real auth before production use.</div>
+    </form>
+    <form id="studentLoginForm" class="login-form hidden" onsubmit="return handleStudentLogin(event)">
+      <h2>Student / Parent Portal</h2>
+      <p class="help">Enter your roll number and full name exactly as registered, for the active session, to view your report card.</p>
+      <div class="field"><label>Class</label><input id="stuClass" placeholder="e.g. One B" required></div>
+      <div class="field"><label>Roll No.</label><input id="stuRoll" placeholder="e.g. 14" required></div>
+      <div class="field"><label>Full Name</label><input id="stuName" placeholder="As per school register" required></div>
+      <button class="btn btn-primary" type="submit">View My Report →</button>
+      <div class="demo-note">Access is read-only: your report card, and merit standing where published by the school.</div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="appShell" class="hidden">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img id="sbLogoImg" class="hidden" src="">
+      <div id="sbLogoFallback" class="logo-fallback">SM</div>
+      <div class="name" id="sbSchoolName">School Mgmt. System<small>Cloud Portal</small></div>
+    </div>
+    <div id="navAdmin">
+      <div class="nav-group-label">Workspace</div>
+      <button class="nav-item active" data-panel="dashboard" onclick="showPanel('dashboard')">${ICON_DASH} Overview Dashboard</button>
+      <button class="nav-item" data-panel="ingestion" onclick="showPanel('ingestion')">${ICON_CSV} CSV Data Ingestion</button>
+      <button class="nav-item" data-panel="report" onclick="showPanel('report')">${ICON_REPORT} Student Report Engine</button>
+      <button class="nav-item" data-panel="merit" onclick="showPanel('merit')">${ICON_MERIT} Class Merit Register</button>
+      <button class="nav-item" data-panel="tc" onclick="showPanel('tc')">${ICON_TC} Transfer Certificate</button>
+      <div class="nav-group-label">Configuration</div>
+      <button class="nav-item" data-panel="branding" onclick="showPanel('branding')">${ICON_BRAND} Branding Configuration</button>
+      <button class="nav-item" data-panel="rules" onclick="showPanel('rules')">${ICON_RULE} Grading &amp; Remarks Rules</button>
+      <button class="nav-item" data-panel="cardlayout" onclick="showPanel('cardlayout')">${ICON_RULE} Result Card Layout</button>
+      <button class="nav-item" data-panel="settings" onclick="showPanel('settings')">${ICON_SETTINGS} Sessions &amp; Cloud Sync</button>
+    </div>
+    <div id="navStudent" class="hidden">
+      <div class="nav-group-label">My Portal</div>
+      <button class="nav-item active" data-panel="report" onclick="showPanel('report')">${ICON_REPORT} My Report Card</button>
+    </div>
+    <div class="sidebar-foot">
+      <div class="cloud-pill"><span class="dot" id="cloudDot"></span><span id="cloudStatusText">Cloud: Not Connected</span></div>
+      <button class="foot-btn" onclick="pullFromCloud()">${ICON_SYNC} Pull Latest From Cloud</button>
+      <button class="foot-btn logout" onclick="handleLogout()">${ICON_LOGOUT} Sign Out</button>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+
+  <main class="workspace">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileSidebar()" aria-label="Open menu">☰</button>
+        <div>
+          <h1 id="topbarTitle">Overview Dashboard</h1>
+          <div class="crumb" id="topbarCrumb">Live enterprise cloud portal</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <select class="session-select hidden" id="sessionSwitcher" onchange="onSessionSwitch(this.value)"></select>
+        <span class="role-badge" id="roleBadge">Administrator</span>
+      </div>
+    </div>
+
+    <div class="panels">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="panel active" id="panel-dashboard">
+        <div class="grid-4" id="dashStatCards"></div>
+        <div class="card" style="margin-top:20px;">
+          <h3>Position Holders by Term</h3>
+          <p class="card-desc">By default this shows how many students hold each position school-wide (ranking is always calculated within each class separately — students in different classes never compete against each other). Pick a class to see that class's actual position holders by name, or "All Classes" to see every class's names listed out.</p>
+          <div class="field-light" style="max-width:280px;">
+            <label>View</label>
+            <select id="dashPodiumClassSelect" onchange="renderDashboard()"></select>
+          </div>
+          <div class="doc-section-title" style="margin-top:14px;">Term 1</div>
+          <div id="dashPodiumTerm1"></div>
+          <div class="doc-section-title">Term 2</div>
+          <div id="dashPodiumTerm2"></div>
+          <div class="doc-section-title">Final Term</div>
+          <div id="dashPodiumFinal"></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Class-wise Strength</h3>
+            <p class="card-desc">Number of enrolled students per active class this session.</p>
+            <div id="dashClassBars"></div>
+          </div>
+          <div class="card">
+            <h3>Term Data Coverage</h3>
+            <p class="card-desc">How many students have marks recorded per term so far.</p>
+            <div id="dashTermCoverage"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CSV INGESTION ============ -->
+      <section class="panel" id="panel-ingestion">
+        <div class="card">
+          <h3>Upload Class CSV Files</h3>
+          <p class="card-desc">Upload one or more class CSV files for a single term, into the active academic session. Class name is detected from each file name (e.g. <span class="mono">Class6.csv</span> → "Class6") unless you override it below.</p>
+          <div class="legend-note">
+            <b>Automatic data cleaning rules applied on import:</b><br>
+            • Any column header named <span class="mono">SST</span> is mapped directly to the <b>Social</b> subject field.<br>
+            • Name variants such as <span class="mono">"Ejaz nawaz"</span> and <span class="mono">"Ajaz Nawaz"</span> are consolidated into one canonical student record to avoid duplicates.<br>
+            • If a <span class="mono">GR No</span> column is present, it is used as the permanent match key (recommended for multi-session continuity); otherwise matching falls back to normalized name within the same class.<br>
+            • A <span class="mono">Section</span> column, if present, is captured alongside Class.
+          </div>
+          <div class="grid-2">
+            <div class="field-light">
+              <label>Term for this upload</label>
+              <select id="csvTermSelect">
+                <option value="term1">Term 1</option>
+                <option value="term2">Term 2</option>
+                <option value="term3">Final / Term 3</option>
+              </select>
+            </div>
+            <div class="field-light">
+              <label>Class Name Override (optional — applies to all files in this batch)</label>
+              <input id="csvClassOverride" placeholder="Leave blank to use file name">
+            </div>
+          </div>
+          <div class="legend-note" style="background:var(--teal-pale);color:#07615f;">Importing into active session: <b id="csvActiveSessionLabel" class="mono"></b> — switch sessions from the top bar or Settings if needed.</div>
+          <div class="doc-section-title" style="margin-top:22px;">Link a Session Folder — Local Computer (No Re-selecting Files Every Time)</div>
+          <p class="card-desc">Link a local folder — e.g. a <span class="mono">2025-26</span> folder containing <span class="mono">KG A.csv</span>, <span class="mono">KG B.csv</span>, <span class="mono">Nursery A.csv</span> — once, and load every class CSV inside it with one click each time you open the app. Requires Chrome or Edge on desktop. Works fully offline.</p>
+          <div id="linkedFolderStatus"></div>
+
+          <div class="doc-section-title" style="margin-top:22px;">Import From Public Links (Simplest — No Google Cloud Setup, Fully Free)</div>
+          <p class="card-desc"><b>Note: Google Sheets "publish to web" links don't work here</b> — Google's servers never send the permission headers browsers require, no matter how the link is formatted, so those will always fail. What genuinely works for free with no sign-in: upload your class CSVs to a free public <a href="https://github.com" target="_blank" rel="noopener">GitHub</a> repository, click the file, click the "Raw" button, and copy that address (it looks like <span class="mono">https://raw.githubusercontent.com/yourname/yourrepo/main/ClassA.csv</span>). Paste one such link per line below.</p>
+          <textarea id="publicCsvLinks" style="display:block;width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:#F8FBFC;font-size:13px;font-family:'JetBrains Mono',monospace;" placeholder="https://raw.githubusercontent.com/yourname/yourrepo/main/ClassA.csv&#10;https://raw.githubusercontent.com/yourname/yourrepo/main/ClassB.csv"></textarea>
+          <div class="btn-row" style="margin-top:10px;">
+            <button class="btn btn-outline btn-sm" onclick="fetchPublicCsvLinks()">Fetch &amp; Queue These Links</button>
+          </div>
+          <div id="publicCsvLinkErrors"></div>
+          <div class="legend-note">Works from any device with internet, completely free, no account setup beyond a free GitHub account. The trade-off: the repository must be public — anyone with the link (or who finds the repo) can view the files. If that's not acceptable for your data, use the Google Drive OAuth option below instead, which keeps files private.</div>
+
+          <div class="doc-section-title" style="margin-top:22px;">Link a Session Folder — Google Drive OAuth (Access a Private Folder)</div>
+          <p class="card-desc">If you'd rather link an actual private Drive folder (not a publicly-shared file) and have every CSV inside it load automatically, this needs a one-time Google Cloud OAuth Client ID — free to create, but more setup than the public-link method above.</p>
+          <div class="grid-2">
+            <div class="field-light"><label>Google OAuth Client ID (one-time setup)</label><input id="gdriveClientId" placeholder="xxxxx.apps.googleusercontent.com"></div>
+            <div class="field-light" style="display:flex;align-items:flex-end;"><button class="btn btn-outline btn-sm" style="width:100%;" onclick="saveGoogleClientId()">Save Client ID</button></div>
+          </div>
+          <div class="grid-2">
+            <div class="field-light"><label>Drive Folder Link or ID</label><input id="gdriveFolderInput" placeholder="Paste the folder's share link or its ID"></div>
+            <div class="field-light" style="display:flex;align-items:flex-end;"><button class="btn btn-outline btn-sm" style="width:100%;" onclick="linkDriveFolder()">Link Folder to This Session</button></div>
+          </div>
+          <div id="driveFolderStatus"></div>
+          <div class="legend-note">Needs a Google Cloud project with the Drive API enabled and an OAuth Client ID (type "Web application") with this page's address added as an authorized JavaScript origin. This page must be hosted at a real http(s) address — opening the file directly (file://) won't allow Google sign-in to complete.</div>
+          <div class="dropzone" id="csvDropzone" onclick="document.getElementById('csvFileInput').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+            <div class="dz-title">Click to select CSV file(s), or drag &amp; drop here</div>
+            <div class="dz-sub">Multiple class files supported per upload batch</div>
+            <input type="file" id="csvFileInput" accept=".csv" multiple class="hidden" onchange="handleCsvFiles(this.files)">
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-teal" id="processCsvBtn" disabled onclick="processQueuedCsv()">Process Queued Files</button>
+            <button class="btn btn-outline" onclick="clearCsvQueue()">Clear Queue</button>
+          </div>
+          <div id="csvQueueList" style="margin-top:12px;"></div>
+          <div id="csvSummary"></div>
+        </div>
+
+        <div class="card">
+          <h3>Class Register</h3>
+          <p class="card-desc">Records for the active session, grouped by class. Click a class to open it, choose a term, and edit any student's details or marks directly in the table — including adding a new student, updating marks, or clearing a whole term's record.</p>
+          <div id="dataPreviewTableWrap"></div>
+        </div>
+      </section>
+
+      <!-- ============ REPORT ENGINE ============ -->
+      <section class="panel" id="panel-report">
+        <div class="card">
+          <h3 id="reportEngineTitle">Student Report Engine</h3>
+          <p class="card-desc" id="reportEngineDesc">Select a term, class and student to generate a term-based result card.</p>
+          <div class="grid-3" id="reportControlsGrid">
+            <div class="field-light">
+              <label>Term</label>
+              <select id="reportTermSelect">
+                <option value="term1">Term 1 Result Card</option>
+                <option value="term2">Term 2 Result Card (with Progress)</option>
+                <option value="final">Final Term — Comprehensive 3-Term Aggregate</option>
+              </select>
+            </div>
+            <div class="field-light" id="reportClassField">
+              <label>Class</label>
+              <select id="reportClassSelect" onchange="onReportClassChange()"></select>
+            </div>
+            <div class="field-light" id="reportStudentField">
+              <label>Student</label>
+              <select id="reportStudentSelect" onchange="onReportStudentChange()"></select>
+            </div>
+            <div class="field-light">
+              <label>Report Date</label>
+              <input type="date" id="reportDateInput">
+            </div>
+          </div>
+          <div class="grid-2" id="attendanceFields">
+            <div class="field-light"><label>Present Days (optional, for Final report)</label><input type="number" min="0" id="attPresent" placeholder="e.g. 172"></div>
+            <div class="field-light"><label>Total Working Days (optional)</label><input type="number" min="0" id="attTotal" placeholder="e.g. 180"></div>
+          </div>
+          <div class="btn-row" id="reportActionsRow">
+            <button class="btn btn-teal" onclick="generateSingleReportCard()">Generate Target Profile Card</button>
+            <button class="btn btn-navy" id="batchBtn" onclick="generateClassBatchSet()">Generate Complete Class Page Batch Set</button>
+            <button class="btn btn-outline" id="historyBtn" onclick="renderStudentHistory()">View Multi-Session History</button>
+          </div>
+        </div>
+
+        <div class="card hidden" id="historyPreviewCard">
+          <h3>Academic History Across Sessions</h3>
+          <p class="card-desc">Linked by permanent GR No. across every session this student has a record in.</p>
+          <div id="historyPreviewArea"></div>
+        </div>
+
+        <div class="card hidden" id="reportPreviewCard">
+          <div class="btn-row" style="margin-bottom:16px;">
+            <button class="btn btn-teal btn-sm" onclick="downloadPdf('reportPreviewArea','report-card')">⬇ Download PDF</button>
+            <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button>
+          </div>
+          <div id="reportPreviewArea"></div>
+        </div>
+      </section>
+
+      <!-- ============ MERIT REGISTER ============ -->
+      <section class="panel" id="panel-merit">
+        <div class="card">
+          <h3>Class Merit Register</h3>
+          <p class="card-desc">Rank students within a class (or the whole school) by their aggregate for a chosen term, active session.</p>
+          <div class="grid-3">
+            <div class="field-light"><label>Class</label><select id="meritClassSelect"></select></div>
+            <div class="field-light">
+              <label>Rank By</label>
+              <select id="meritTermSelect">
+                <option value="term1">Term 1</option>
+                <option value="term2">Term 2</option>
+                <option value="final" selected>Final Term Aggregate</option>
+              </select>
+            </div>
+            <div class="field-light" style="display:flex;align-items:flex-end;">
+              <button class="btn btn-teal" style="width:100%;" onclick="generateMeritRegister()">Generate Merit Ledger</button>
+            </div>
+          </div>
+        </div>
+        <div class="card hidden" id="meritPreviewCard">
+          <div class="btn-row" style="margin-bottom:16px;">
+            <button class="btn btn-teal btn-sm" onclick="downloadPdf('meritPreviewArea','merit-register',true)">⬇ Download PDF</button>
+            <button class="btn btn-outline btn-sm" onclick="exportMeritCsv()">⬇ Export CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button>
+          </div>
+          <div id="meritPreviewArea"></div>
+        </div>
+      </section>
+
+      <!-- ============ TRANSFER CERTIFICATE ============ -->
+      <section class="panel" id="panel-tc">
+        <div class="card">
+          <h3>Transfer Certificate</h3>
+          <p class="card-desc">Fill in leaving details for a student to generate an official school leaving document.</p>
+          <div class="grid-3">
+            <div class="field-light"><label>Class</label><select id="tcClassSelect" onchange="onTcClassChange()"></select></div>
+            <div class="field-light"><label>Student</label><select id="tcStudentSelect"></select></div>
+            <div class="field-light"><label>Fees Status</label>
+              <select id="tcFeesStatus"><option value="Cleared">Cleared / Paid in Full</option><option value="Due">Dues Pending</option><option value="NA">Not Applicable</option></select>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="field-light"><label>Date of Birth</label><input type="date" id="tcDob"></div>
+            <div class="field-light"><label>Admission Date</label><input type="date" id="tcAdmission"></div>
+            <div class="field-light"><label>Leaving Date</label><input type="date" id="tcLeaving"></div>
+          </div>
+          <div class="grid-3">
+            <div class="field-light"><label>Conduct</label><select id="tcConduct"><option>Excellent</option><option selected>Good</option><option>Satisfactory</option></select></div>
+            <div class="field-light"><label>Class Last Studied In</label><input id="tcClassStudied" placeholder="Auto-filled from selection"></div>
+            <div class="field-light"><label>Reason for Leaving</label><input id="tcReason" placeholder="e.g. Family relocation"></div>
+          </div>
+          <button class="btn btn-teal" onclick="generateTC()">Generate Transfer Certificate</button>
+        </div>
+        <div class="card hidden" id="tcPreviewCard">
+          <div class="btn-row" style="margin-bottom:16px;">
+            <button class="btn btn-teal btn-sm" onclick="downloadPdf('tcPreviewArea','transfer-certificate')">⬇ Download PDF</button>
+            <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button>
+          </div>
+          <div id="tcPreviewArea"></div>
+        </div>
+      </section>
+
+      <!-- ============ BRANDING ============ -->
+      <section class="panel" id="panel-branding">
+        <div class="card">
+          <h3>Branding Configuration</h3>
+          <p class="card-desc">Upload your school's identity assets. All fields below are blank by default — the header, footer and watermark only appear on generated documents if you fill them in.</p>
+          <div class="grid-2">
+            <div class="field-light"><label>School Name (blank = no header text)</label><input id="brandSchoolName" placeholder="Leave blank for no header text"></div>
+            <div class="field-light"><label>School Address / Tagline (blank = omitted)</label><input id="brandSchoolSub" placeholder="Leave blank to omit"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field-light"><label>Footer Note (blank = no footer text)</label><input id="brandFooterText" placeholder="Leave blank for a blank footer"></div>
+            <div class="field-light"><label>Document Page Size</label>
+              <select id="brandPageSize">
+                <option value="A3">A3</option>
+                <option value="A4">A4 (default)</option>
+                <option value="A5">A5</option>
+                <option value="B5">B5</option>
+                <option value="Letter">Letter</option>
+                <option value="Legal">Legal</option>
+              </select>
+            </div>
+          </div>
+          <div class="legend-note">
+            <b>Printing on pre-printed letterhead paper?</b> Measure the blank space your letterhead's printed header (and footer, if any) already takes up, and set the margins below to match — the app leaves that space blank so your content prints under the letterhead artwork instead of over it. These margins apply to both "Download PDF" and the browser "Print" button.
+          </div>
+          <div class="grid-4">
+            <div class="field-light"><label>Top Margin (mm)</label><input type="number" min="0" id="marginTopInput" placeholder="e.g. 35 for a tall letterhead header"></div>
+            <div class="field-light"><label>Bottom Margin (mm)</label><input type="number" min="0" id="marginBottomInput"></div>
+            <div class="field-light"><label>Left Margin (mm)</label><input type="number" min="0" id="marginLeftInput"></div>
+            <div class="field-light"><label>Right Margin (mm)</label><input type="number" min="0" id="marginRightInput"></div>
+          </div>
+          <div class="upload-row">
+            <div class="upload-thumb" id="thumbLogo">${ICON_IMG}</div>
+            <div class="upload-info"><b>School Logo</b><span>Shown in document headers and the sidebar</span></div>
+            <input type="file" accept="image/*" id="uploadLogo" class="hidden" onchange="handleBrandUpload(this,'logo','thumbLogo')">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('uploadLogo').click()">Upload</button>
+          </div>
+          <div class="upload-row">
+            <div class="upload-thumb" id="thumbCap">${ICON_IMG}</div>
+            <div class="upload-info"><b>Graduation Cap Graphic</b><span>Used as the faint watermark on printed documents</span></div>
+            <input type="file" accept="image/*" id="uploadCap" class="hidden" onchange="handleBrandUpload(this,'cap','thumbCap')">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('uploadCap').click()">Upload</button>
+          </div>
+          <div class="upload-row">
+            <div class="upload-thumb" id="thumbPrincipalSig">${ICON_IMG}</div>
+            <div class="upload-info"><b>Principal's Signature <span class="tag">optional</span></b><span>Placed above the Principal Approval line</span></div>
+            <input type="file" accept="image/*" id="uploadPrincipalSig" class="hidden" onchange="handleBrandUpload(this,'principalSig','thumbPrincipalSig')">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('uploadPrincipalSig').click()">Upload</button>
+          </div>
+          <div class="upload-row">
+            <div class="upload-thumb" id="thumbTeacherSig">${ICON_IMG}</div>
+            <div class="upload-info"><b>Class Teacher's Signature <span class="tag">optional</span></b><span>Placed above the Class Teacher line on report cards &amp; TC</span></div>
+            <input type="file" accept="image/*" id="uploadTeacherSig" class="hidden" onchange="handleBrandUpload(this,'teacherSig','thumbTeacherSig')">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('uploadTeacherSig').click()">Upload</button>
+          </div>
+          <div class="upload-row">
+            <div class="upload-thumb" id="thumbExamSig">${ICON_IMG}</div>
+            <div class="upload-info"><b>Head Examination Board Signature <span class="tag">optional</span></b><span>Off by default — enable this line in "Signature Lines on Result Cards" below if you want it to appear</span></div>
+            <input type="file" accept="image/*" id="uploadExamSig" class="hidden" onchange="handleBrandUpload(this,'examSig','thumbExamSig')">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('uploadExamSig').click()">Upload</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-teal" onclick="saveBranding()">Save Branding</button>
+            <button class="btn btn-outline" onclick="pushBrandingToCloud()">Sync Branding to Cloud</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Signature Lines on Result Cards</h3>
+          <p class="card-desc">Choose exactly which signature lines print at the bottom of a result card. Uploaded images above are used automatically wherever a matching line is enabled; add your own custom line if you need something else.</p>
+          <div id="signatureConfigWrap"></div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div class="field-light"><label>Add a Custom Signature Line</label><input id="newSigLabel" placeholder="e.g. Vice Principal"></div>
+            <div class="field-light" style="display:flex;align-items:flex-end;"><button class="btn btn-outline btn-sm" style="width:100%;" onclick="addCustomSignature()">+ Add Signature Line</button></div>
+          </div>
+          <button class="btn btn-teal btn-sm" onclick="saveSignatureConfig()">Save Signature Lines</button>
+        </div>
+      </section>
+
+      <!-- ============ GRADING & REMARKS RULES ============ -->
+      <section class="panel" id="panel-rules">
+        <div class="card">
+          <h3>Grades Rule Engine</h3>
+          <p class="card-desc">Define the percentage thresholds used for the letter <b>Grade</b> shown on every result card and register. Rules are evaluated highest threshold first.</p>
+          <div id="gradesEditorWrap"></div>
+          <div class="btn-row">
+            <button class="btn btn-outline btn-sm" onclick="addGradeRow()">+ Add Threshold</button>
+            <button class="btn btn-teal btn-sm" onclick="saveGradesRules()">Save Grades Rule</button>
+            <button class="btn btn-outline btn-sm" onclick="resetGradesRules()">Reset to Default</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Remarks Rule Engine</h3>
+          <p class="card-desc">Define the percentage thresholds used to auto-generate subject <b>Remarks</b> (e.g. "Excellent", "Needs Effort") on report cards, separate from letter grades.</p>
+          <div id="rulesEditorWrap"></div>
+          <div class="btn-row">
+            <button class="btn btn-outline btn-sm" onclick="addRuleRow()">+ Add Threshold</button>
+            <button class="btn btn-teal btn-sm" onclick="saveRemarksRules()">Save Rules</button>
+            <button class="btn btn-outline btn-sm" onclick="resetRemarksRules()">Reset to Default</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Pass / Fail Status Wording</h3>
+          <p class="card-desc">Set the minimum passing percentage and the exact words used for the Result Status and Promotion Status badges (e.g. "Pass"/"Fail", or "Promoted"/"Detained").</p>
+          <div class="grid-3">
+            <div class="field-light"><label>Minimum % to Pass</label><input type="number" min="0" max="100" id="passThresholdInput"></div>
+            <div class="field-light"><label>Pass Label</label><input id="passLabelInput" placeholder="Pass"></div>
+            <div class="field-light"><label>Fail Label</label><input id="failLabelInput" placeholder="Fail"></div>
+          </div>
+          <button class="btn btn-teal btn-sm" onclick="saveStatusLabels()">Save Status Wording</button>
+        </div>
+        <div class="card">
+          <h3>Subject Total Marks</h3>
+          <p class="card-desc">Every subject defaults to 100 total marks. Since some classes mark the same subject out of a different total (e.g. English out of 50 in Play Group but 100 in upper classes), pick a scope below: set the <b>Global Default</b> for the general fallback, or pick a specific class to override just that class's total. Class overrides always win over the global default. New subjects are added automatically the first time they appear in an uploaded CSV.</p>
+          <div class="field-light" style="max-width:320px;">
+            <label>Scope</label>
+            <select id="subjectMaxScopeSelect" onchange="renderSubjectMaxEditor()"></select>
+          </div>
+          <div id="subjectMaxWrap"></div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div class="field-light"><label>Add / Pre-register a Subject (in the scope selected above)</label><input id="newSubjectName" placeholder="e.g. Computer"></div>
+            <div class="field-light"><label>Total Marks</label><input type="number" min="1" id="newSubjectMax" placeholder="100"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-outline btn-sm" onclick="addSubjectMax()">+ Add Subject</button>
+            <button class="btn btn-teal btn-sm" onclick="saveSubjectMaxMarks()">Save Total Marks</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ RESULT CARD LAYOUT ============ -->
+      <section class="panel" id="panel-cardlayout">
+        <div class="card">
+          <h3>Document Titles</h3>
+          <p class="card-desc">The heading printed at the top of each card, e.g. "Comprehensive Student Progress Report (3-Term Aggregate)".</p>
+          <div class="grid-3">
+            <div class="field-light"><label>Term 1 Card Title</label><input id="titleTerm1"></div>
+            <div class="field-light"><label>Term 2 Card Title</label><input id="titleTerm2"></div>
+            <div class="field-light"><label>Final Card Title</label><input id="titleFinal"></div>
+          </div>
+          <button class="btn btn-teal btn-sm" onclick="saveCardTitles()">Save Titles</button>
+        </div>
+
+        <div class="card">
+          <h3>Typography &amp; Alignment</h3>
+          <p class="card-desc">Controls the table headings (Subject, Total Marks, Term 1, etc.) and the body content below them (subject names, marks, grades). Changes apply live — open a result card preview in another tab of this panel, or generate one first, to watch it update as you adjust.</p>
+          <div class="grid-2">
+            <div>
+              <label style="display:block;font-size:12.3px;font-weight:600;margin-bottom:6px;">Heading Alignment</label>
+              <select id="typoHeaderAlign" class="field-light" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:#F8FBFC;" oninput="onTypographyInput()" onchange="saveCardTypography()">
+                <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12.3px;font-weight:600;margin-bottom:6px;">Heading Font Size — <span id="typoHeaderSizeVal"></span></label>
+              <input type="range" min="7" max="20" step="0.5" id="typoHeaderSize" style="width:100%;" oninput="onTypographyInput()" onchange="saveCardTypography()">
+            </div>
+            <div>
+              <label style="display:block;font-size:12.3px;font-weight:600;margin-bottom:6px;">Body Alignment (subject names, marks, grades)</label>
+              <select id="typoBodyAlign" class="field-light" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:#F8FBFC;" oninput="onTypographyInput()" onchange="saveCardTypography()">
+                <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12.3px;font-weight:600;margin-bottom:6px;">Body Font Size — <span id="typoBodySizeVal"></span></label>
+              <input type="range" min="7" max="18" step="0.5" id="typoBodySize" style="width:100%;" oninput="onTypographyInput()" onchange="saveCardTypography()">
+            </div>
+          </div>
+          <div class="legend-note" style="margin-top:14px;">
+            <b>Printing looking too light or faded?</b> Darken the main text and caption colors below — set both to pure black for maximum print contrast — and/or turn on Bold Text for thicker strokes that hold up better on lower-quality printers.
+          </div>
+          <div class="grid-3">
+            <div>
+              <label style="display:block;font-size:12.3px;font-weight:600;margin-bottom:6px;">Main Text Color</label>
+              <input type="color" id="typoTextColor" style="width:100%;height:40px;border:1px solid var(--line);border-radius:8px;padding:2px;" oninput="onTypographyInput()" onchange="saveCardTypography()">
+            </div>
+            <div>
+              <label style="display:block;font-size:12.3px;font-weight:600;margin-bottom:6px;">Caption / Label Color</label>
+              <input type="color" id="typoMutedColor" style="width:100%;height:40px;border:1px solid var(--line);border-radius:8px;padding:2px;" oninput="onTypographyInput()" onchange="saveCardTypography()">
+            </div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:8px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13.4px;font-weight:600;">
+                <input type="checkbox" id="typoBoldText" style="width:18px;height:18px;" oninput="onTypographyInput()" onchange="saveCardTypography()"> Bold Text (darker on print)
+              </label>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="resetCardTypography()">Reset Typography to Default</button>
+        </div>
+
+        <div class="card">
+          <h3>Summary Row Fields</h3>
+          <p class="card-desc">Show or hide the Class Position ("3rd of 45") and Position ("3rd") boxes independently — turn off either or both if you don't want them on the card.</p>
+          <div class="grid-2">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13.4px;font-weight:600;"><input type="checkbox" id="sumFieldClassPosition" style="width:18px;height:18px;"> Show Class Position</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13.4px;font-weight:600;"><input type="checkbox" id="sumFieldPosition" style="width:18px;height:18px;"> Show Position</label>
+          </div>
+          <button class="btn btn-teal btn-sm" style="margin-top:10px;" onclick="saveSummaryFields()">Save</button>
+        </div>
+
+        <div class="card">
+          <h3>Column &amp; Section Headings</h3>
+          <p class="card-desc">These words are combined automatically (e.g. "Term 1" + "Grade" → "Term 1 Grade") so renaming one word updates it everywhere it's used.</p>
+          <div class="grid-4" id="cardLabelsWrap"></div>
+          <div class="btn-row">
+            <button class="btn btn-teal btn-sm" onclick="saveCardLabels()">Save Headings</button>
+            <button class="btn btn-outline btn-sm" onclick="resetCardLayout()">Reset All Layout to Default</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Term 1 Card — Columns</h3>
+          <p class="card-desc">"Subject" and "Term 1 Obtained" always show; toggle the rest on or off.</p>
+          <div class="grid-3" id="colsTerm1Wrap"></div>
+          <button class="btn btn-teal btn-sm" onclick="saveCardColumns()">Save Column Choices</button>
+        </div>
+
+        <div class="card">
+          <h3>Term 2 Card — Columns</h3>
+          <p class="card-desc">Each term's Obtained marks always show — toggle Total Marks, Percentage and Grade independently for Term 1 and Term 2.</p>
+          <div class="grid-3" id="colsTerm2Wrap"></div>
+          <button class="btn btn-teal btn-sm" onclick="saveCardColumns()">Save Column Choices</button>
+        </div>
+
+        <div class="card">
+          <h3>Final Card — Columns</h3>
+          <p class="card-desc">This is where you can add per-term subject grades — e.g. turn on "Term 1 Grade", "Term 2 Grade" and "Term 3 Grade" to show a grade next to each term's marks, alongside the existing aggregate Final Grade.</p>
+          <div class="grid-3" id="colsFinalWrap"></div>
+          <button class="btn btn-teal btn-sm" onclick="saveCardColumns()">Save Column Choices</button>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="panel" id="panel-settings">
+        <div class="card">
+          <h3>Academic Sessions</h3>
+          <p class="card-desc">Every student record belongs to a session (e.g. <span class="mono">2026-2027</span>). Create a new session each academic year — optionally carrying the roster forward — while every past session's results stay permanently attached and viewable.</p>
+          <div id="sessionsList"></div>
+          <div class="grid-3" style="margin-top:14px;">
+            <div class="field-light" style="grid-column:span 2;"><label>New Session Label</label><input id="newSessionLabel" placeholder="e.g. 2027-2028"></div>
+            <div class="field-light" style="display:flex;align-items:center;gap:8px;padding-top:26px;">
+              <input type="checkbox" id="carryForwardRoster" style="width:auto;" checked>
+              <label style="margin:0;font-size:12.3px;">Carry forward roster</label>
+            </div>
+          </div>
+          <button class="btn btn-teal btn-sm" onclick="createNewSession()">Create Session</button>
+          <div class="legend-note" style="margin-top:14px;">
+            <b>How session-linking works:</b> each student keeps a permanent <span class="mono">GR No.</span> When you upload a new session's CSVs with the same GR No, that student's new term marks attach to the same identity, and their full history stays browsable via "View Multi-Session History" in the Report Engine. Always include a GR No column in your CSVs for reliable continuity across years.
+          </div>
+        </div>
+        <div class="card">
+          <h3>Cloud Sync Settings — Supabase</h3>
+          <p class="card-desc">Connect this portal to a Supabase project for live cross-device sync of the student register and branding.</p>
+          <div class="grid-2">
+            <div class="field-light"><label>Supabase Project URL</label><input id="sbUrl" placeholder="https://xxxxx.supabase.co"></div>
+            <div class="field-light"><label>Supabase Anon Public Key</label><input id="sbKey" placeholder="eyJhbGciOi..." type="password"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-teal" onclick="saveSupabaseConfig()">Connect</button>
+            <button class="btn btn-outline" onclick="pushToCloud()">Push Students Now</button>
+            <button class="btn btn-outline" onclick="pullFromCloud()">Pull Students Now</button>
+            <button class="btn btn-danger" onclick="disconnectSupabase()">Disconnect</button>
+          </div>
+          <div class="legend-note" style="margin-top:16px;">
+            Required tables (run once in the Supabase SQL editor):<br>
+            <span class="mono">create table sms_students (id int primary key, data text, updated_at timestamptz);</span><br>
+            <span class="mono">create table sms_branding (id int primary key, data text, updated_at timestamptz);</span><br>
+            Both tables need Row Level Security disabled or an appropriate anon-access policy for this prototype to read/write. The students payload includes every session, so pulling on another device restores full history.
+          </div>
+        </div>
+        <div class="card">
+          <h3>Administrator Credentials</h3>
+          <p class="card-desc">Change the demo login password for the Administrator Desk.</p>
+          <div class="grid-2">
+            <div class="field-light"><label>New Username</label><input id="newAdminUser" placeholder="admin"></div>
+            <div class="field-light"><label>New Password</label><input id="newAdminPass" type="password" placeholder="••••••••"></div>
+          </div>
+          <button class="btn btn-outline" onclick="updateAdminCreds()">Update Credentials</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ============================================================
+   ICONS
+   ============================================================ */
+const ICON_DASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>';
+const ICON_CSV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V3m0 12-4-4m4 4 4-4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>';
+const ICON_REPORT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h8l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h6M9 8h3"/></svg>';
+const ICON_MERIT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/><path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5"/></svg>';
+const ICON_TC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>';
+const ICON_BRAND='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 1 8l11 6 9-4.91V17h2V8L12 2zM5 13.18v4.09c0 1 1.5 3.73 7 3.73s7-2.73 7-3.73v-4.09"/></svg>';
+const ICON_SETTINGS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+const ICON_SYNC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
+const ICON_LOGOUT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>';
+const ICON_RULE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
+const ICON_IMG='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9AA7B2" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+
+document.getElementById('navAdmin').innerHTML = document.getElementById('navAdmin').innerHTML
+  .replaceAll('${ICON_DASH}',ICON_DASH).replaceAll('${ICON_CSV}',ICON_CSV).replaceAll('${ICON_REPORT}',ICON_REPORT)
+  .replaceAll('${ICON_MERIT}',ICON_MERIT).replaceAll('${ICON_TC}',ICON_TC).replaceAll('${ICON_BRAND}',ICON_BRAND)
+  .replaceAll('${ICON_RULE}',ICON_RULE).replaceAll('${ICON_SETTINGS}',ICON_SETTINGS);
+document.getElementById('navStudent').innerHTML = document.getElementById('navStudent').innerHTML.replaceAll('${ICON_REPORT}',ICON_REPORT);
+document.querySelector('.sidebar-foot').innerHTML = document.querySelector('.sidebar-foot').innerHTML
+  .replaceAll('${ICON_SYNC}',ICON_SYNC).replaceAll('${ICON_LOGOUT}',ICON_LOGOUT);
+document.querySelectorAll('.upload-thumb').forEach(el=>{ if(!el.querySelector('img')) el.innerHTML = ICON_IMG; });
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STORAGE_KEY='sms_state_v2';
+const PASS_PCT=33;
+const DEFAULT_RULES=[
+  {min:85,label:'Excellent'},
+  {min:80,label:'Good Progress'},
+  {min:60,label:'Satisfactory'},
+  {min:50,label:'Needs Effort'},
+  {min:0,label:'Unsatisfactory'}
+];
+const DEFAULT_GRADES=[
+  {min:90,label:'A+'},
+  {min:80,label:'A'},
+  {min:70,label:'B'},
+  {min:60,label:'C'},
+  {min:45,label:'D'},
+  {min:33,label:'E'},
+  {min:0,label:'F'}
+];
+const DEFAULT_SIGNATURES=[
+  {id:'teacher', label:'Class Teacher', enabled:true, imageKey:'teacherSig'},
+  {id:'principal', label:'Principal', enabled:true, imageKey:'principalSig'},
+  {id:'parent', label:'Parent / Guardian', enabled:true, imageKey:null},
+  {id:'exam', label:'Head Examination Board', enabled:false, imageKey:'examSig'}
+];
+const DEFAULT_CARD_STYLE = { headerAlign:'left', headerFontSize:10.6, bodyAlign:'left', bodyFontSize:12.6, textColor:'#152436', mutedColor:'#63788C', boldText:false };
+const DEFAULT_CARD_LAYOUT = {
+  titles: {
+    term1: 'Term 1 Result Card',
+    term2: 'Term 2 Result Card',
+    final: 'Comprehensive Student Progress Report (3-Term Aggregate)'
+  },
+  labels: {
+    subject:'Subject', totalMarks:'Total Marks', obtained:'Obtained', grade:'Grade', percentage:'Percentage',
+    term1:'Term 1', term2:'Term 2', term3:'Term 3', totalOb:'Total Ob', totalMax:'Total Max', finalGrade:'Final Grade',
+    marks:'Marks', classPosition:'Class Position', position:'Position', resultStatus:'Result Status',
+    sectionTermSummary:'Term Performance Summary', sectionFinalMatrix:'Final Year-End Aggregate Matrix', sectionRemarks:'Subject-wise Remarks'
+  },
+  columns: {
+    term1: { totalMarks:true, percentage:false, grade:true },
+    term2: { t1TotalMarks:true, t1Percentage:false, t1Grade:true, t2TotalMarks:true, t2Percentage:false, t2Grade:true },
+    final: { totalMarks:true, term1:true, term1Grade:false, term2:true, term2Grade:false, term3:true, term3Grade:false, totalOb:true, totalMax:true, percentage:true, finalGrade:true }
+  },
+  summaryFields: { classPosition:true, position:true }
+};
+
+let appState = {
+  branding:{ logo:null, cap:null, principalSig:null, teacherSig:null, examSig:null, schoolName:'', schoolSub:'', footerText:'', signatures: JSON.parse(JSON.stringify(DEFAULT_SIGNATURES)), customSigImages:{} },
+  students:[], // {id, grNo, name, roll, fatherName, class, section, session, term1:{}, term2:{}, term3:{}, attendance:{present,total}}
+  sessionsList:['2026-2027'],
+  currentSession:'2026-2027',
+  remarksRules: JSON.parse(JSON.stringify(DEFAULT_RULES)),
+  gradesRules: JSON.parse(JSON.stringify(DEFAULT_GRADES)),
+  subjectMaxMarks: {}, // { normalizedsubjectkey: { label, max } } — global default
+  classSubjectMaxMarks: {}, // { classnamelower: { normalizedsubjectkey: { label, max } } } — per-class override
+  statusLabels: { passLabel:'Pass', failLabel:'Fail', passThreshold:33 },
+  pageSettings: { size:'A4', marginTop:8, marginRight:8, marginBottom:8, marginLeft:8 },
+  cardLayout: JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT)),
+  cardStyle: JSON.parse(JSON.stringify(DEFAULT_CARD_STYLE)),
+  driveFolders: {} // { sessionLabel: driveFolderId }
+};
+let currentUser = { role:null, studentId:null };
+let currentPanelId = 'dashboard';
+let csvQueue = [];
+let supabaseClient = null;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ const parsed = JSON.parse(raw); appState = Object.assign(appState, parsed); }
+  }catch(e){ console.error('State load failed', e); }
+  if(!appState.sessionsList || !appState.sessionsList.length) appState.sessionsList=['2026-2027'];
+  if(!appState.currentSession) appState.currentSession = appState.sessionsList[0];
+  if(!appState.remarksRules || !appState.remarksRules.length) appState.remarksRules = JSON.parse(JSON.stringify(DEFAULT_RULES));
+  if(!appState.gradesRules || !appState.gradesRules.length) appState.gradesRules = JSON.parse(JSON.stringify(DEFAULT_GRADES));
+  if(!appState.subjectMaxMarks) appState.subjectMaxMarks = {};
+  if(!appState.classSubjectMaxMarks) appState.classSubjectMaxMarks = {};
+  if(!appState.statusLabels) appState.statusLabels = { passLabel:'Pass', failLabel:'Fail', passThreshold:33 };
+  if(!appState.branding.signatures || !appState.branding.signatures.length) appState.branding.signatures = JSON.parse(JSON.stringify(DEFAULT_SIGNATURES));
+  if(!appState.branding.customSigImages) appState.branding.customSigImages = {};
+  if(appState.branding.footerText===undefined) appState.branding.footerText = '';
+  if(!appState.pageSettings) appState.pageSettings = { size:'A4', marginTop:8, marginRight:8, marginBottom:8, marginLeft:8 };
+  if(!PAGE_SIZES[appState.pageSettings.size]) appState.pageSettings.size = 'A4';
+  ['marginTop','marginRight','marginBottom','marginLeft'].forEach(k=>{ if(appState.pageSettings[k]==null || isNaN(appState.pageSettings[k])) appState.pageSettings[k]=8; });
+  if(!appState.cardLayout) appState.cardLayout = JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT));
+  appState.cardLayout.titles = Object.assign({}, DEFAULT_CARD_LAYOUT.titles, appState.cardLayout.titles);
+  appState.cardLayout.labels = Object.assign({}, DEFAULT_CARD_LAYOUT.labels, appState.cardLayout.labels);
+  appState.cardLayout.columns = appState.cardLayout.columns || {};
+  ['term1','term2','final'].forEach(m=>{ appState.cardLayout.columns[m] = Object.assign({}, DEFAULT_CARD_LAYOUT.columns[m], appState.cardLayout.columns[m]); });
+  appState.cardLayout.summaryFields = Object.assign({}, DEFAULT_CARD_LAYOUT.summaryFields, appState.cardLayout.summaryFields);
+  if(!appState.cardStyle) appState.cardStyle = JSON.parse(JSON.stringify(DEFAULT_CARD_STYLE));
+  appState.cardStyle = Object.assign({}, DEFAULT_CARD_STYLE, appState.cardStyle);
+  if(!appState.driveFolders) appState.driveFolders = {};
+  appState.students.forEach(s=>{ if(!s.session) s.session = appState.sessionsList[0]; if(!s.attendance) s.attendance={}; ['term1Attendance','term2Attendance','term3Attendance'].forEach(k=>{ if(s[k]===undefined) s[k]=null; }); });
+  if(!localStorage.getItem('sms_admin_creds')){ localStorage.setItem('sms_admin_creds', JSON.stringify({user:'admin', pass:'admin123'})); }
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
+  catch(e){ console.error('State save failed', e); }
+}
+function sessionStudents(){ return appState.students.filter(s=>s.session===appState.currentSession); }
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+function showToast(msg, type){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' '+type : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='.25s'; setTimeout(()=>el.remove(),260); }, 3200);
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function switchLoginTab(role){
+  document.getElementById('tabAdmin').classList.toggle('active', role==='admin');
+  document.getElementById('tabStudent').classList.toggle('active', role==='student');
+  document.getElementById('adminLoginForm').classList.toggle('hidden', role!=='admin');
+  document.getElementById('studentLoginForm').classList.toggle('hidden', role!=='student');
+  document.getElementById('loginErrorBox').classList.add('hidden');
+}
+function showLoginError(msg){ const box=document.getElementById('loginErrorBox'); box.textContent=msg; box.classList.remove('hidden'); }
+function handleAdminLogin(e){
+  e.preventDefault();
+  const u=document.getElementById('adminUser').value.trim(), p=document.getElementById('adminPass').value;
+  const creds = JSON.parse(localStorage.getItem('sms_admin_creds')||'{"user":"admin","pass":"admin123"}');
+  if(u===creds.user && p===creds.pass){ currentUser={role:'admin',studentId:null}; enterApp(); }
+  else showLoginError('Invalid administrator credentials.');
+  return false;
+}
+function normalizeName(name){
+  let n=(name||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const aliasMap={'ejaz nawaz':'ejaz nawaz','ajaz nawaz':'ejaz nawaz'};
+  if(aliasMap[n]) n=aliasMap[n];
+  return n;
+}
+function handleStudentLogin(e){
+  e.preventDefault();
+  const cls=document.getElementById('stuClass').value.trim().toLowerCase();
+  const roll=document.getElementById('stuRoll').value.trim().toLowerCase();
+  const name=normalizeName(document.getElementById('stuName').value);
+  const match = sessionStudents().find(s=>
+    (s.class||'').trim().toLowerCase()===cls &&
+    String(s.roll||'').trim().toLowerCase()===roll &&
+    normalizeName(s.name)===name
+  );
+  if(match){ currentUser={role:'student',studentId:match.id}; enterApp(); }
+  else showLoginError('No matching student record found in the active session. Please check class, roll number and name.');
+  return false;
+}
+function handleLogout(){
+  currentUser={role:null,studentId:null};
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('loginOverlay').style.display='flex';
+  document.getElementById('adminUser').value=''; document.getElementById('adminPass').value='';
+}
+function enterApp(){
+  document.getElementById('loginOverlay').style.display='none';
+  document.getElementById('appShell').classList.remove('hidden');
+  applyBrandingToUI();
+  populateSessionSwitcher();
+  if(currentUser.role==='admin'){
+    document.getElementById('navAdmin').classList.remove('hidden');
+    document.getElementById('navStudent').classList.add('hidden');
+    document.getElementById('roleBadge').textContent='Administrator';
+    document.getElementById('sessionSwitcher').classList.remove('hidden');
+    showPanel('dashboard');
+  } else {
+    document.getElementById('navAdmin').classList.add('hidden');
+    document.getElementById('navStudent').classList.remove('hidden');
+    document.getElementById('roleBadge').textContent='Student / Parent';
+    document.getElementById('sessionSwitcher').classList.add('hidden');
+    setupStudentPortal();
+    showPanel('report');
+  }
+}
+
+/* ============================================================
+   SESSIONS
+   ============================================================ */
+function populateSessionSwitcher(){
+  const sel = document.getElementById('sessionSwitcher');
+  sel.innerHTML = appState.sessionsList.map(s=>`<option value="${escapeHtml(s)}" ${s===appState.currentSession?'selected':''}>${escapeHtml(s)}</option>`).join('');
+}
+function onSessionSwitch(val){
+  appState.currentSession = val;
+  saveState();
+  showToast('Switched to session '+val);
+  showPanel(currentPanelId);
+}
+function renderSessionsList(){
+  const wrap = document.getElementById('sessionsList');
+  wrap.innerHTML = appState.sessionsList.map(s=>{
+    const count = appState.students.filter(st=>st.session===s).length;
+    const active = s===appState.currentSession;
+    return `<div class="session-row ${active?'active-row':''}">
+      <div><b>${escapeHtml(s)}</b><br><span>${count} student record(s)</span></div>
+      ${active ? '<span class="tag">Active Session</span>' : `<button class="btn btn-outline btn-xs" onclick="onSessionSwitch('${escapeHtml(s)}');populateSessionSwitcher();renderSessionsList();">Set Active</button>`}
+    </div>`;
+  }).join('');
+}
+function createNewSession(){
+  const label = document.getElementById('newSessionLabel').value.trim();
+  if(!label){ showToast('Enter a session label, e.g. 2027-2028.','error'); return; }
+  if(appState.sessionsList.includes(label)){ showToast('That session already exists.','error'); return; }
+  const carry = document.getElementById('carryForwardRoster').checked;
+  if(carry){
+    sessionStudents().forEach(s=>{
+      appState.students.push({
+        id: uuid(), grNo: s.grNo||'', name: s.name, roll: s.roll||'', fatherName: s.fatherName||'',
+        class: s.class||'', section: s.section||'', session: label,
+        term1:{}, term2:{}, term3:{}, attendance:{}
+      });
+    });
+  }
+  appState.sessionsList.push(label);
+  appState.currentSession = label;
+  saveState();
+  populateSessionSwitcher();
+  renderSessionsList();
+  document.getElementById('newSessionLabel').value='';
+  showToast(`Session "${label}" created and set active${carry?' with roster carried forward':''}.`,'success');
+  showPanel('settings');
+}
+
+/* ============================================================
+   NAV / PANELS
+   ============================================================ */
+function toggleMobileSidebar(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('open');
+}
+function closeMobileSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('open');
+}
+function showPanel(id){
+  currentPanelId = id;
+  closeMobileSidebar();
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const target = document.getElementById('panel-'+id);
+  if(target) target.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.panel===id));
+  const titles = {
+    dashboard:['Overview Dashboard','Live enrollment, class and merit metrics'],
+    ingestion:['CSV Data Ingestion','Upload and clean class CSV files'],
+    report:[currentUser.role==='student' ? 'My Report Card' : 'Student Report Engine', 'Term-based result card generator'],
+    merit:['Class Merit Register','Rank students by aggregate performance'],
+    tc:['Transfer Certificate','Generate an official school leaving document'],
+    branding:['Branding Configuration','School identity assets for generated PDFs'],
+    rules:['Grading & Remarks Rules','Configure grades, remarks, subject max marks and status wording'],
+    cardlayout:['Result Card Layout','Rename any heading and choose which columns appear on each term\'s card'],
+    settings:['Sessions & Cloud Sync','Manage academic sessions and Supabase connection']
+  };
+  const t = titles[id] || ['',''];
+  document.getElementById('topbarTitle').textContent = t[0];
+  document.getElementById('topbarCrumb').textContent = t[1];
+  if(id==='dashboard') renderDashboard();
+  if(id==='ingestion'){ document.getElementById('csvActiveSessionLabel').textContent = appState.currentSession; renderDataPreview(); renderLinkedFolderStatus(); renderDriveFolderStatus(); }
+  if(id==='report') populateReportControls();
+  if(id==='merit') populateMeritControls();
+  if(id==='tc') populateTcControls();
+  if(id==='rules'){ renderGradesEditor(); renderRulesEditor(); renderSubjectMaxEditor(); populateStatusLabelsUI(); }
+  if(id==='cardlayout') renderCardLayoutPanel();
+  if(id==='settings') renderSessionsList();
+  if(id==='branding') renderSignatureConfig();
+}
+
+/* ============================================================
+   CSV INGESTION
+   ============================================================ */
+function classFromFilename(fname){
+  let base = fname.replace(/\.csv$/i,'');
+  base = base.replace(/[_\-]+/g,' ').trim();
+  return base || 'Unnamed Class';
+}
+function handleCsvFiles(fileList){ for(const f of fileList){ csvQueue.push(f); } renderCsvQueue(); }
+function renderCsvQueue(){
+  const wrap = document.getElementById('csvQueueList');
+  document.getElementById('processCsvBtn').disabled = csvQueue.length===0;
+  if(csvQueue.length===0){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = '<table class="data-table"><thead><tr><th>File</th><th>Detected Class</th><th></th></tr></thead><tbody>' +
+    csvQueue.map((f,i)=>`<tr><td>${escapeHtml(f.name)}</td><td>${escapeHtml(classFromFilename(f.name))}</td><td><button class="btn btn-outline btn-sm" onclick="removeQueueItem(${i})">Remove</button></td></tr>`).join('') +
+    '</tbody></table>';
+}
+function removeQueueItem(i){ csvQueue.splice(i,1); renderCsvQueue(); }
+function clearCsvQueue(){ csvQueue=[]; renderCsvQueue(); document.getElementById('csvSummary').innerHTML=''; document.getElementById('csvFileInput').value=''; }
+
+const RESERVED_HEADERS = ['name','studentname','roll','rollno','rollnumber','class','fathername','fathersname','admissionno','dob','dateofbirth','grno','grnumber','section'];
+function cleanHeaderKey(h){ return (h||'').trim().toLowerCase().replace(/[^a-z]/g,''); }
+function mapHeaderToSubject(h){ const key=cleanHeaderKey(h); if(key==='sst') return 'Social'; return (h||'').trim(); }
+function findHeader(headers, matcher){ return headers.find(h=>matcher(cleanHeaderKey(h))); }
+
+function processQueuedCsv(){
+  if(csvQueue.length===0) return;
+  const term = document.getElementById('csvTermSelect').value;
+  const classOverride = document.getElementById('csvClassOverride').value.trim();
+  const session = appState.currentSession;
+  let filesProcessed=0, rowsProcessed=0, mergedDuplicates=0, aliasHits=0, classesTouched=new Set();
+
+  const finish = ()=>{
+    saveState(); renderDataPreview();
+    const summary = document.getElementById('csvSummary');
+    summary.innerHTML = `<div class="legend-note" style="margin-top:14px;background:var(--success-bg);color:var(--success);">
+      ✅ Processed <b>${filesProcessed}</b> file(s), <b>${rowsProcessed}</b> row(s) into <b>${classesTouched.size}</b> class(es) for <b>${termLabel(term)}</b> — session <b>${session}</b>.
+      ${mergedDuplicates ? `<br>🔁 Merged <b>${mergedDuplicates}</b> duplicate record(s).` : ''}
+      ${aliasHits ? `<br>🔗 Consolidated <b>${aliasHits}</b> record(s) via the "Ejaz Nawaz / Ajaz Nawaz" alias rule.` : ''}
+    </div>`;
+    csvQueue=[]; renderCsvQueue(); document.getElementById('csvFileInput').value='';
+    showToast('CSV ingestion complete','success');
+  };
+
+  let remaining = csvQueue.length;
+  csvQueue.forEach(file=>{
+    const detectedClass = classOverride || classFromFilename(file.name);
+    Papa.parse(file, {
+      header:true, skipEmptyLines:true,
+      complete: (results)=>{
+        const headers = results.meta.fields || [];
+        const nameHeader = findHeader(headers, k=>['name','studentname'].includes(k));
+        const rollHeader = findHeader(headers, k=>['roll','rollno','rollnumber'].includes(k));
+        const fatherHeader = findHeader(headers, k=>['fathername','fathersname'].includes(k));
+        const classHeader = findHeader(headers, k=>k==='class');
+        const grHeader = findHeader(headers, k=>['grno','grnumber'].includes(k));
+        const sectionHeader = findHeader(headers, k=>k==='section');
+        const attendanceHeader = findHeader(headers, k=>k.includes('attendance'));
+        const subjectHeaders = headers.filter(h=>{
+          const k = cleanHeaderKey(h);
+          return k!=='' && !RESERVED_HEADERS.includes(k) && h!==nameHeader && h!==rollHeader && h!==fatherHeader && h!==classHeader && h!==grHeader && h!==sectionHeader && h!==attendanceHeader;
+        });
+
+        results.data.forEach(row=>{
+          const rawName = nameHeader ? row[nameHeader] : '';
+          if(!rawName || !rawName.trim()) return;
+          const cls = (classHeader && row[classHeader] && row[classHeader].trim()) ? row[classHeader].trim() : detectedClass;
+          const grNoRaw = grHeader ? (row[grHeader]||'').trim() : '';
+          const rawNormLower = rawName.trim().toLowerCase();
+          if(rawNormLower==='ajaz nawaz') aliasHits++;
+          const attendancePct = attendanceHeader ? (()=>{ const n=parseFloat(row[attendanceHeader]); return isNaN(n)?null:n; })() : undefined;
+
+          const subjects = {};
+          subjectHeaders.forEach(h=>{
+            const label = mapHeaderToSubject(h);
+            const val = parseFloat(row[h]);
+            subjects[label] = isNaN(val) ? null : val;
+            registerSubjectIfNew(label);
+          });
+
+          let existing = null;
+          if(grNoRaw){ existing = appState.students.find(s=> s.session===session && s.grNo && s.grNo===grNoRaw); }
+          if(!existing){
+            existing = appState.students.find(s=> s.session===session && (s.class||'').toLowerCase()===cls.toLowerCase() && normalizeName(s.name)===normalizeName(rawName));
+          }
+          const displayName = normalizeName(rawName)==='ejaz nawaz' ? 'Ejaz Nawaz' : titleCase(rawName.trim());
+
+          if(existing){
+            mergedDuplicates++;
+            existing[term] = Object.assign({}, existing[term]||{}, subjects);
+            if(rollHeader && row[rollHeader]) existing.roll = row[rollHeader].trim();
+            if(fatherHeader && row[fatherHeader]) existing.fatherName = row[fatherHeader].trim();
+            if(grNoRaw) existing.grNo = grNoRaw;
+            if(sectionHeader && row[sectionHeader]) existing.section = row[sectionHeader].trim();
+            if(attendancePct!==undefined) existing[term+'Attendance'] = attendancePct;
+            existing.class = cls;
+          } else {
+            const newStudent = {
+              id: uuid(), grNo: grNoRaw, name: displayName,
+              roll: rollHeader ? (row[rollHeader]||'').trim() : '',
+              fatherName: fatherHeader ? (row[fatherHeader]||'').trim() : '',
+              class: cls, section: sectionHeader ? (row[sectionHeader]||'').trim() : '',
+              session, term1:{}, term2:{}, term3:{}, attendance:{},
+              term1Attendance:null, term2Attendance:null, term3Attendance:null,
+              [term]: subjects
+            };
+            if(attendancePct!==undefined) newStudent[term+'Attendance'] = attendancePct;
+            appState.students.push(newStudent);
+          }
+          classesTouched.add(cls);
+          rowsProcessed++;
+        });
+        filesProcessed++; remaining--;
+        if(remaining===0) finish();
+      },
+      error: ()=>{ remaining--; if(remaining===0) finish(); }
+    });
+  });
+}
+function termLabel(t){ return t==='term1'?'Term 1': t==='term2'?'Term 2':'Final / Term 3'; }
+function titleCase(s){ return s.replace(/\w\S*/g, w=> w.charAt(0).toUpperCase()+w.substr(1).toLowerCase()); }
+function uuid(){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{ const r=Math.random()*16|0; const v=c==='x'?r:(r&0x3|0x8); return v.toString(16); }); }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; }
+
+/* ============================================================
+   PAGE SIZE + BLANK-BY-DEFAULT HEADER/FOOTER HELPERS
+   (shared by the Result Card, Merit Register, and Transfer Certificate)
+   ============================================================ */
+const PAGE_SIZES = {
+  A3: { widthPx: 1123, jspdf: 'a3' },
+  A4: { widthPx: 794,  jspdf: 'a4' },
+  A5: { widthPx: 559,  jspdf: 'a5' },
+  B5: { widthPx: 665,  jspdf: 'b5' },
+  Letter: { widthPx: 816, jspdf: 'letter' },
+  Legal:  { widthPx: 816, jspdf: 'legal' }
+};
+function currentPageSize(){ return (appState.pageSettings && appState.pageSettings.size) || 'A4'; }
+function isCompactPageSize(){ const s=currentPageSize(); return s==='A5' || s==='B5'; }
+function docSheetClasses(pageBreak){ return `doc-sheet ${pageBreak?'pdf-page':''} ${isCompactPageSize()?'doc-compact':''}`; }
+function docSheetStyleAttr(){
+  const cfg = PAGE_SIZES[currentPageSize()] || PAGE_SIZES.A4;
+  return `max-width:${cfg.widthPx}px;`;
+}
+function buildDocHeadHtml(b){
+  const hasHeader = !!(b.logo || (b.schoolName && b.schoolName.trim()) || (b.schoolSub && b.schoolSub.trim()));
+  if(!hasHeader) return '';
+  return `<div class="doc-head">
+    ${b.logo ? `<img class="doc-logo" src="${b.logo}">` : ''}
+    <div>${b.schoolName && b.schoolName.trim() ? `<div class="doc-school-name">${escapeHtml(b.schoolName)}</div>` : ''}${b.schoolSub && b.schoolSub.trim() ? `<div class="doc-school-sub">${escapeHtml(b.schoolSub)}</div>` : ''}</div>
+  </div>`;
+}
+function buildDocFootHtml(b){
+  return (b.footerText && b.footerText.trim()) ? `<div class="doc-foot-note">${escapeHtml(b.footerText)}</div>` : '';
+}
+
+let _registerClasses = [];
+let _registerTermByClass = {};
+function jsStr(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+function renderDataPreview(){
+  const wrap = document.getElementById('dataPreviewTableWrap');
+  if(!wrap) return;
+  const openStates = Array.from(wrap.querySelectorAll('details')).map(d=>d.open);
+  _registerClasses = distinctClasses();
+  if(_registerClasses.length===0){
+    wrap.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/></svg><div>No student records yet in this session. Upload a CSV above to get started.</div></div>`;
+    return;
+  }
+  wrap.innerHTML = _registerClasses.map((cls,ci)=>{
+    const inClass = sessionStudents().filter(s=>s.class===cls);
+    const t1=inClass.filter(s=>hasData(s.term1)).length, t2=inClass.filter(s=>hasData(s.term2)).length, t3=inClass.filter(s=>hasData(s.term3)).length;
+    if(_registerTermByClass[ci]===undefined) _registerTermByClass[ci]='term1';
+    const tsel = _registerTermByClass[ci];
+    return `
+    <details class="class-register-block">
+      <summary class="class-register-summary">
+        <span class="crs-name">${escapeHtml(cls)}</span>
+        <span class="crs-meta">${inClass.length} student${inClass.length===1?'':'s'} · Term 1: ${t1}/${inClass.length} · Term 2: ${t2}/${inClass.length} · Final: ${t3}/${inClass.length}</span>
+        <span class="crs-arrow">▸</span>
+      </summary>
+      <div class="class-register-body">
+        <div class="btn-row" style="margin:0 0 12px;align-items:flex-end;">
+          <div class="field-light" style="max-width:200px;margin:0;">
+            <label>Term to View / Edit</label>
+            <select onchange="setRegisterTerm(${ci}, this.value)">
+              <option value="term1" ${tsel==='term1'?'selected':''}>Term 1</option>
+              <option value="term2" ${tsel==='term2'?'selected':''}>Term 2</option>
+              <option value="term3" ${tsel==='term3'?'selected':''}>Final / Term 3</option>
+            </select>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="addStudentToClass(${ci})">+ Add Student</button>
+          <button class="btn btn-outline btn-sm" onclick="addSubjectColumnToClass(${ci})">+ Add Subject Column</button>
+          <button class="btn btn-danger btn-sm" onclick="clearTermForClass(${ci})">🗑 Clear This Term for Whole Class</button>
+        </div>
+        <div id="classRegisterTable_${ci}"></div>
+      </div>
+    </details>`;
+  }).join('');
+  Array.from(wrap.querySelectorAll('details')).forEach((d,i)=>{ if(openStates[i]) d.open = true; });
+  _registerClasses.forEach((cls,ci)=> renderClassRegisterTable(ci));
+}
+function setRegisterTerm(ci, term){ _registerTermByClass[ci]=term; renderClassRegisterTable(ci); }
+function classSubjectsForTerm(cls, term){
+  const inClass = sessionStudents().filter(s=>s.class===cls);
+  const set=[];
+  inClass.forEach(s=>{ Object.keys(s[term]||{}).forEach(k=>{ if(!set.includes(k)) set.push(k); }); });
+  return set;
+}
+function renderClassRegisterTable(ci){
+  const cls = _registerClasses[ci];
+  const term = _registerTermByClass[ci] || 'term1';
+  const wrap = document.getElementById('classRegisterTable_'+ci);
+  if(!wrap) return;
+  const inClass = sessionStudents().filter(s=>s.class===cls).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const subjects = classSubjectsForTerm(cls, term);
+  if(inClass.length===0){ wrap.innerHTML = '<div class="empty-state" style="padding:16px;">No students in this class yet.</div>'; return; }
+  const header = `<tr><th>Name</th><th>Roll</th><th>GR No</th><th>Father Name</th><th>Section</th><th>Attendance %</th>${subjects.map(sub=>`<th>${escapeHtml(sub)}</th>`).join('')}<th>Actions</th></tr>`;
+  const rows = inClass.map(s=>{
+    const cells = subjects.map(sub=>{
+      const v = (s[term]||{})[sub];
+      return `<td><input class="reg-input" type="number" style="width:66px;" value="${v!=null?v:''}" onchange="updateStudentMark('${s.id}','${term}','${jsStr(sub)}',this.value)"></td>`;
+    }).join('');
+    const attVal = s[term+'Attendance'];
+    return `<tr>
+      <td><input class="reg-input" type="text" style="width:130px;" value="${escapeAttr(s.name)}" onchange="updateStudentField('${s.id}','name',this.value)"></td>
+      <td><input class="reg-input" type="text" style="width:56px;" value="${escapeAttr(s.roll||'')}" onchange="updateStudentField('${s.id}','roll',this.value)"></td>
+      <td><input class="reg-input" type="text" style="width:70px;" value="${escapeAttr(s.grNo||'')}" onchange="updateStudentField('${s.id}','grNo',this.value)"></td>
+      <td><input class="reg-input" type="text" style="width:120px;" value="${escapeAttr(s.fatherName||'')}" onchange="updateStudentField('${s.id}','fatherName',this.value)"></td>
+      <td><input class="reg-input" type="text" style="width:64px;" value="${escapeAttr(s.section||'')}" onchange="updateStudentField('${s.id}','section',this.value)"></td>
+      <td><input class="reg-input" type="number" style="width:60px;" value="${attVal!=null?attVal:''}" onchange="updateStudentAttendancePct('${s.id}','${term}',this.value)"></td>
+      ${cells}
+      <td style="white-space:nowrap;">
+        <button class="btn btn-outline btn-xs" onclick="clearStudentTerm('${s.id}','${term}')" title="Clear this student's ${termLabel(term)} record">Clear Term</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteStudent('${s.id}')" title="Delete this student entirely">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<div style="overflow-x:auto;"><table class="data-table">${header}<tbody>${rows}</tbody></table></div>`;
+}
+function updateStudentAttendancePct(id, term, val){
+  const s = appState.students.find(x=>x.id===id); if(!s) return;
+  const num = parseFloat(val);
+  s[term+'Attendance'] = val===''?null:(isNaN(num)?null:num);
+  saveState();
+}
+function updateStudentField(id, field, val){
+  const s = appState.students.find(x=>x.id===id); if(!s) return;
+  s[field] = val.trim();
+  saveState();
+}
+function updateStudentMark(id, term, subject, val){
+  const s = appState.students.find(x=>x.id===id); if(!s) return;
+  if(!s[term]) s[term]={};
+  const num = parseFloat(val);
+  s[term][subject] = val===''? null : (isNaN(num)?null:num);
+  registerSubjectIfNew(subject);
+  saveState();
+}
+function clearStudentTerm(id, term){
+  if(!confirm(`Clear this student's ${termLabel(term)} record? This cannot be undone.`)) return;
+  const s = appState.students.find(x=>x.id===id); if(!s) return;
+  s[term] = {};
+  saveState();
+  renderDataPreview();
+  showToast('Term record cleared.','success');
+}
+function deleteStudent(id){
+  if(!confirm('Delete this student record entirely? This cannot be undone.')) return;
+  appState.students = appState.students.filter(x=>x.id!==id);
+  saveState();
+  renderDataPreview();
+  showToast('Student deleted.','success');
+}
+function clearTermForClass(ci){
+  const cls = _registerClasses[ci], term = _registerTermByClass[ci];
+  if(!confirm(`Clear ${termLabel(term)} records for ALL students in ${cls}? This cannot be undone.`)) return;
+  sessionStudents().filter(s=>s.class===cls).forEach(s=>{ s[term]={}; });
+  saveState();
+  renderDataPreview();
+  showToast('Term cleared for the whole class.','success');
+}
+function addStudentToClass(ci){
+  const cls = _registerClasses[ci];
+  appState.students.push({ id:uuid(), grNo:'', name:'New Student', roll:'', fatherName:'', class:cls, section:'', session:appState.currentSession, term1:{}, term2:{}, term3:{}, attendance:{} });
+  saveState();
+  renderDataPreview();
+  showToast('New student row added — edit the fields directly in the table.','success');
+}
+function addSubjectColumnToClass(ci){
+  const name = prompt('New subject name for this class (marks can then be entered directly in the table):');
+  if(!name) return;
+  registerSubjectIfNew(name);
+  const cls=_registerClasses[ci], term=_registerTermByClass[ci];
+  sessionStudents().filter(s=>s.class===cls).forEach(s=>{ if(!s[term]) s[term]={}; if(!(name in s[term])) s[term][name]=null; });
+  saveState();
+  renderClassRegisterTable(ci);
+  showToast('Subject column added — enter marks directly.','success');
+}
+function hasData(termObj){ return termObj && Object.keys(termObj).length>0; }
+
+/* ============================================================
+   CALCULATIONS
+   ============================================================ */
+function unionSubjects(student, modes){
+  const set=[];
+  modes.forEach(t=>{ const obj=student[t]||{}; Object.keys(obj).forEach(k=>{ if(!set.includes(k)) set.push(k); }); });
+  return set;
+}
+function subjectMaxKey(sub){ return (sub||'').trim().toLowerCase(); }
+function classKey(cls){ return (cls||'').trim().toLowerCase(); }
+function ordinal(n){
+  if(n==null || isNaN(n)) return '';
+  const v = n % 100;
+  const suf = ['th','st','nd','rd'];
+  return n + (suf[(v-20)%10] || suf[v] || suf[0]);
+}
+function getSubjectMax(sub, cls){
+  const sKey = subjectMaxKey(sub);
+  if(cls){
+    const clsMap = appState.classSubjectMaxMarks[classKey(cls)];
+    if(clsMap && clsMap[sKey] && clsMap[sKey].max) return clsMap[sKey].max;
+  }
+  const entry = appState.subjectMaxMarks[sKey];
+  return (entry && entry.max) ? entry.max : 100;
+}
+function registerSubjectIfNew(sub){
+  const key = subjectMaxKey(sub);
+  if(key && !appState.subjectMaxMarks[key]) appState.subjectMaxMarks[key] = { label: sub, max: 100 };
+}
+function subjectsMaxSum(subjects, cls){ return (subjects||[]).reduce((a,s)=>a+getSubjectMax(s,cls),0); }
+function getGrade(pct){
+  if(pct==null || isNaN(pct)) return '—';
+  const sorted = [...appState.gradesRules].sort((a,b)=>b.min-a.min);
+  for(const r of sorted){ if(pct>=r.min) return r.label; }
+  return sorted.length ? sorted[sorted.length-1].label : '—';
+}
+function getRemark(pct){
+  if(pct==null || isNaN(pct)) return '—';
+  const sorted = [...appState.remarksRules].sort((a,b)=>b.min-a.min);
+  for(const r of sorted){ if(pct>=r.min) return r.label; }
+  return sorted.length ? sorted[sorted.length-1].label : '—';
+}
+function sumTerm(termObj, subjects){
+  let total=0, counted=[];
+  subjects.forEach(s=>{ const v=(termObj||{})[s]; if(v!=null && !isNaN(v)){ total+=v; counted.push(s); } });
+  return {total, count:counted.length, counted};
+}
+/* Standalone stats for exactly one term (no cross-term addition) — used by the result card display */
+function termOwnStats(student, termKey){
+  const subjects = Object.keys(student[termKey]||{});
+  const r = sumTerm(student[termKey], subjects);
+  const max = subjectsMaxSum(r.counted, student.class);
+  return { subjects: r.counted, total:r.total, max, pct: max?(r.total/max*100):0 };
+}
+/* Cumulative multi-term aggregate — used for Merit Register ranking and class-position calcs */
+function computeStudentAggregate(student, mode){
+  if(mode==='term1'){
+    const subjects = Object.keys(student.term1||{});
+    const r = sumTerm(student.term1, subjects);
+    const max = subjectsMaxSum(r.counted, student.class);
+    return { subjects, total:r.total, max, pct: max? (r.total/max*100):0 };
+  }
+  if(mode==='term2'){
+    const subjects = unionSubjects(student, ['term1','term2']);
+    const t1 = sumTerm(student.term1, subjects), t2 = sumTerm(student.term2, subjects);
+    const total = t1.total+t2.total, max = subjectsMaxSum(subjects, student.class)*2;
+    return { subjects, t1, t2, total, max, pct: max? (total/max*100):0 };
+  }
+  const subjects = unionSubjects(student, ['term1','term2','term3']);
+  const t1 = sumTerm(student.term1, subjects), t2 = sumTerm(student.term2, subjects), t3 = sumTerm(student.term3, subjects);
+  const total = t1.total+t2.total+t3.total, max = subjectsMaxSum(subjects, student.class)*3;
+  return { subjects, t1, t2, t3, total, max, pct: max? (total/max*100):0 };
+}
+function bestAvailableMode(student){
+  if(hasData(student.term3)) return 'final';
+  if(hasData(student.term2)) return 'term2';
+  if(hasData(student.term1)) return 'term1';
+  return null;
+}
+function distinctClasses(){ return [...new Set(sessionStudents().map(s=>s.class).filter(Boolean))].sort(); }
+
+/* rank within class using cumulative-mode percentage (used for podium & final matrix) */
+function studentRank(student, mode){
+  const peers = sessionStudents().filter(s=>s.class===student.class);
+  const rows = peers.map(s=>({s, agg:computeStudentAggregate(s,mode)}))
+    .filter(r=>{
+      if(mode==='term1') return hasData(r.s.term1);
+      if(mode==='term2') return hasData(r.s.term1)||hasData(r.s.term2);
+      return hasData(r.s.term3)||hasData(r.s.term2)||hasData(r.s.term1);
+    });
+  rows.sort((a,b)=> b.agg.pct-a.agg.pct || b.agg.total-a.agg.total);
+  let rank=0, prevPct=null, prevTotal=null;
+  rows.forEach((r,i)=>{ if(prevPct===null||r.agg.pct!==prevPct||r.agg.total!==prevTotal){ rank++; } r.rank=rank; prevPct=r.agg.pct; prevTotal=r.agg.total; });
+  const mine = rows.find(r=>r.s.id===student.id);
+  return { rank: mine?mine.rank:null, classSize: rows.length };
+}
+/* rank using a single standalone term's marks (not cumulative) */
+function studentTermRank(student, termKey){
+  const peers = sessionStudents().filter(s=>s.class===student.class && hasData(s[termKey]));
+  const rows = peers.map(s=> ({ s, stat: termOwnStats(s, termKey) }));
+  rows.sort((a,b)=> b.stat.pct-a.stat.pct || b.stat.total-a.stat.total);
+  let rank=0, prevPct=null, prevTotal=null;
+  rows.forEach((r,i)=>{ if(prevPct===null||r.stat.pct!==prevPct||r.stat.total!==prevTotal){ rank++; } r.rank=rank; prevPct=r.stat.pct; prevTotal=r.stat.total; });
+  const mine = rows.find(r=>r.s.id===student.id);
+  return { rank: mine?mine.rank:null, classSize: rows.length, total: mine?mine.stat.total:0, max: mine?mine.stat.max:0, pct: mine?mine.stat.pct:0 };
+}
+
+/* ============================================================
+   REMARKS RULE ENGINE UI
+   ============================================================ */
+function renderRulesEditor(){
+  const wrap = document.getElementById('rulesEditorWrap');
+  const sorted = [...appState.remarksRules].sort((a,b)=>b.min-a.min);
+  wrap.innerHTML = '<div class="rule-row"><b style="font-size:11.5px;color:var(--muted);text-transform:uppercase;">Min %</b><b style="font-size:11.5px;color:var(--muted);text-transform:uppercase;">Remark Label</b><span></span></div>' +
+    sorted.map((r,i)=>`<div class="rule-row">
+      <input type="number" min="0" max="100" value="${r.min}" data-idx="${i}" onchange="updateRuleMin(${i},this.value)">
+      <input type="text" value="${escapeHtml(r.label)}" data-idx="${i}" onchange="updateRuleLabel(${i},this.value)">
+      <button class="btn btn-danger btn-xs" onclick="removeRuleRow(${i})">✕</button>
+    </div>`).join('');
+  appState._sortedRulesCache = sorted;
+}
+function updateRuleMin(i,val){ appState._sortedRulesCache[i].min = parseFloat(val)||0; }
+function updateRuleLabel(i,val){ appState._sortedRulesCache[i].label = val; }
+function removeRuleRow(i){ appState._sortedRulesCache.splice(i,1); appState.remarksRules = appState._sortedRulesCache; renderRulesEditor(); }
+function addRuleRow(){ appState.remarksRules = appState._sortedRulesCache || appState.remarksRules; appState.remarksRules.push({min:0,label:'New Remark'}); renderRulesEditor(); }
+function saveRemarksRules(){ appState.remarksRules = appState._sortedRulesCache; saveState(); showToast('Remarks rules saved.','success'); }
+function resetRemarksRules(){ appState.remarksRules = JSON.parse(JSON.stringify(DEFAULT_RULES)); saveState(); renderRulesEditor(); showToast('Remarks rules reset to default.'); }
+
+function renderGradesEditor(){
+  const wrap = document.getElementById('gradesEditorWrap');
+  const sorted = [...appState.gradesRules].sort((a,b)=>b.min-a.min);
+  wrap.innerHTML = '<div class="rule-row"><b style="font-size:11.5px;color:var(--muted);text-transform:uppercase;">Min %</b><b style="font-size:11.5px;color:var(--muted);text-transform:uppercase;">Grade Label</b><span></span></div>' +
+    sorted.map((r,i)=>`<div class="rule-row">
+      <input type="number" min="0" max="100" value="${r.min}" onchange="updateGradeMin(${i},this.value)">
+      <input type="text" value="${escapeHtml(r.label)}" onchange="updateGradeLabel(${i},this.value)">
+      <button class="btn btn-danger btn-xs" onclick="removeGradeRow(${i})">✕</button>
+    </div>`).join('');
+  appState._sortedGradesCache = sorted;
+}
+function updateGradeMin(i,val){ appState._sortedGradesCache[i].min = parseFloat(val)||0; }
+function updateGradeLabel(i,val){ appState._sortedGradesCache[i].label = val; }
+function removeGradeRow(i){ appState._sortedGradesCache.splice(i,1); appState.gradesRules = appState._sortedGradesCache; renderGradesEditor(); }
+function addGradeRow(){ appState.gradesRules = appState._sortedGradesCache || appState.gradesRules; appState.gradesRules.push({min:0,label:'New'}); renderGradesEditor(); }
+function saveGradesRules(){ appState.gradesRules = appState._sortedGradesCache; saveState(); showToast('Grades rule saved.','success'); }
+function resetGradesRules(){ appState.gradesRules = JSON.parse(JSON.stringify(DEFAULT_GRADES)); saveState(); renderGradesEditor(); showToast('Grades rule reset to default.'); }
+
+function renderSubjectMaxEditor(){
+  const scopeSelect = document.getElementById('subjectMaxScopeSelect');
+  const classes = distinctClasses();
+  const prevVal = scopeSelect.value || '__global__';
+  scopeSelect.innerHTML = '<option value="__global__">Global Default (fallback for classes with no override)</option>' +
+    classes.map(c=>`<option value="${escapeAttr(c)}">${escapeHtml(c)} (class-specific)</option>`).join('');
+  scopeSelect.value = Array.from(scopeSelect.options).some(o=>o.value===prevVal) ? prevVal : '__global__';
+  const scope = scopeSelect.value;
+  const wrap = document.getElementById('subjectMaxWrap');
+  const headerRow = '<div class="rule-row" style="grid-template-columns:1fr 110px 110px;"><b style="font-size:11.5px;color:var(--muted);text-transform:uppercase;">Subject</b><b style="font-size:11.5px;color:var(--muted);text-transform:uppercase;">Total Marks</b><span></span></div>';
+
+  if(scope==='__global__'){
+    const keys = Object.keys(appState.subjectMaxMarks).sort();
+    if(keys.length===0){ wrap.innerHTML = '<div class="empty-state" style="padding:14px;">No subjects registered yet — upload a CSV or add one below.</div>'; return; }
+    wrap.innerHTML = headerRow + keys.map(k=>`<div class="rule-row" style="grid-template-columns:1fr 110px 110px;">
+      <div style="padding:8px 10px;font-size:13px;">${escapeHtml(appState.subjectMaxMarks[k].label)}</div>
+      <input type="number" min="1" value="${appState.subjectMaxMarks[k].max}" onchange="updateSubjectMax('${k}',this.value)">
+      <button class="btn btn-danger btn-xs" onclick="removeSubjectMax('${k}')">✕ Remove</button>
+    </div>`).join('');
+  } else {
+    const cKey = classKey(scope);
+    const inClass = sessionStudents().filter(s=>s.class===scope);
+    const subjSet = [];
+    inClass.forEach(s=>['term1','term2','term3'].forEach(t=>Object.keys(s[t]||{}).forEach(k=>{ if(!subjSet.includes(k)) subjSet.push(k); })));
+    if(subjSet.length===0){ wrap.innerHTML = '<div class="empty-state" style="padding:14px;">No subjects recorded yet for this class — add one below once you know the subject name.</div>'; return; }
+    const clsMap = appState.classSubjectMaxMarks[cKey] || {};
+    wrap.innerHTML = headerRow + subjSet.sort().map(sub=>{
+      const sKey = subjectMaxKey(sub);
+      const overridden = clsMap[sKey];
+      const currentVal = overridden ? overridden.max : getSubjectMax(sub);
+      return `<div class="rule-row" style="grid-template-columns:1fr 110px 110px;">
+        <div style="padding:8px 10px;font-size:13px;">${escapeHtml(sub)} ${overridden?'':'<span class="tag">using global default</span>'}</div>
+        <input type="number" min="1" value="${currentVal}" onchange="updateClassSubjectMax('${jsStr(scope)}','${jsStr(sub)}',this.value)">
+        ${overridden ? `<button class="btn btn-outline btn-xs" onclick="removeClassSubjectOverride('${jsStr(scope)}','${jsStr(sub)}')">Use Default</button>` : '<span></span>'}
+      </div>`;
+    }).join('');
+  }
+}
+function updateSubjectMax(key,val){ appState.subjectMaxMarks[key].max = parseFloat(val)||100; }
+function removeSubjectMax(key){ delete appState.subjectMaxMarks[key]; saveState(); renderSubjectMaxEditor(); }
+function updateClassSubjectMax(cls, subject, val){
+  const cKey = classKey(cls);
+  if(!appState.classSubjectMaxMarks[cKey]) appState.classSubjectMaxMarks[cKey] = {};
+  appState.classSubjectMaxMarks[cKey][subjectMaxKey(subject)] = { label:subject, max: parseFloat(val)||100 };
+}
+function removeClassSubjectOverride(cls, subject){
+  const cKey = classKey(cls);
+  if(appState.classSubjectMaxMarks[cKey]) delete appState.classSubjectMaxMarks[cKey][subjectMaxKey(subject)];
+  saveState();
+  renderSubjectMaxEditor();
+  showToast('Reverted to the global default for this subject.','success');
+}
+function addSubjectMax(){
+  const name = document.getElementById('newSubjectName').value.trim();
+  const max = parseFloat(document.getElementById('newSubjectMax').value) || 100;
+  if(!name){ showToast('Enter a subject name.','error'); return; }
+  const scope = document.getElementById('subjectMaxScopeSelect').value;
+  if(scope==='__global__'){
+    appState.subjectMaxMarks[subjectMaxKey(name)] = { label:name, max };
+  } else {
+    const cKey = classKey(scope);
+    if(!appState.classSubjectMaxMarks[cKey]) appState.classSubjectMaxMarks[cKey] = {};
+    appState.classSubjectMaxMarks[cKey][subjectMaxKey(name)] = { label:name, max };
+  }
+  document.getElementById('newSubjectName').value=''; document.getElementById('newSubjectMax').value='';
+  renderSubjectMaxEditor();
+}
+function saveSubjectMaxMarks(){ saveState(); showToast('Subject total marks saved.','success'); }
+
+/* ============================================================
+   RESULT CARD LAYOUT — editable titles, headings, and per-mode column toggles
+   ============================================================ */
+const COLUMN_META = {
+  term1: [['totalMarks','Total Marks'],['percentage','Percentage'],['grade','Grade']],
+  term2: [['t1TotalMarks','Term 1 Total Marks'],['t1Percentage','Term 1 Percentage'],['t1Grade','Term 1 Grade'],['t2TotalMarks','Term 2 Total Marks'],['t2Percentage','Term 2 Percentage'],['t2Grade','Term 2 Grade']],
+  final: [['totalMarks','Total Marks'],['term1','Term 1 Marks'],['term1Grade','Term 1 Grade'],['term2','Term 2 Marks'],['term2Grade','Term 2 Grade'],['term3','Term 3 Marks'],['term3Grade','Term 3 Grade'],['totalOb','Total Obtained'],['totalMax','Total Max'],['percentage','Percentage'],['finalGrade','Final Grade']]
+};
+const LABEL_META = [
+  ['subject','Subject'],['totalMarks','Total Marks'],['obtained','Obtained'],['grade','Grade'],['percentage','Percentage'],
+  ['term1','Term 1'],['term2','Term 2'],['term3','Term 3'],['totalOb','Total Ob'],['totalMax','Total Max'],['finalGrade','Final Grade'],
+  ['marks','Marks (summary box)'],['classPosition','Class Position'],['position','Position (plain ordinal)'],['resultStatus','Result Status'],
+  ['sectionTermSummary','Term Performance Summary (section title)'],['sectionFinalMatrix','Final Year-End Matrix (section title)'],['sectionRemarks','Subject-wise Remarks (section title)']
+];
+function renderCardLayoutPanel(){
+  populateTypographyUI();
+  document.getElementById('sumFieldClassPosition').checked = appState.cardLayout.summaryFields.classPosition;
+  document.getElementById('sumFieldPosition').checked = appState.cardLayout.summaryFields.position;
+  const cl = appState.cardLayout;
+  document.getElementById('titleTerm1').value = cl.titles.term1;
+  document.getElementById('titleTerm2').value = cl.titles.term2;
+  document.getElementById('titleFinal').value = cl.titles.final;
+  document.getElementById('cardLabelsWrap').innerHTML = LABEL_META.map(([key,desc])=>`
+    <div class="field-light"><label>${escapeHtml(desc)}</label><input data-labelkey="${key}" value="${escapeAttr(cl.labels[key])}"></div>`).join('');
+  const colHtml = (mode)=> COLUMN_META[mode].map(([key,desc])=>`
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0;">
+      <input type="checkbox" data-mode="${mode}" data-colkey="${key}" ${cl.columns[mode][key]?'checked':''}> ${escapeHtml(desc)}
+    </label>`).join('');
+  document.getElementById('colsTerm1Wrap').innerHTML = colHtml('term1');
+  document.getElementById('colsTerm2Wrap').innerHTML = colHtml('term2');
+  document.getElementById('colsFinalWrap').innerHTML = colHtml('final');
+}
+function saveCardTitles(){
+  appState.cardLayout.titles.term1 = document.getElementById('titleTerm1').value.trim() || DEFAULT_CARD_LAYOUT.titles.term1;
+  appState.cardLayout.titles.term2 = document.getElementById('titleTerm2').value.trim() || DEFAULT_CARD_LAYOUT.titles.term2;
+  appState.cardLayout.titles.final = document.getElementById('titleFinal').value.trim() || DEFAULT_CARD_LAYOUT.titles.final;
+  saveState(); showToast('Titles saved.','success');
+}
+function saveCardLabels(){
+  document.querySelectorAll('#cardLabelsWrap input[data-labelkey]').forEach(inp=>{
+    const key = inp.dataset.labelkey;
+    appState.cardLayout.labels[key] = inp.value.trim() || DEFAULT_CARD_LAYOUT.labels[key];
+  });
+  saveState(); showToast('Headings saved.','success');
+}
+function saveCardColumns(){
+  document.querySelectorAll('[data-mode][data-colkey]').forEach(inp=>{
+    appState.cardLayout.columns[inp.dataset.mode][inp.dataset.colkey] = inp.checked;
+  });
+  saveState(); showToast('Column choices saved.','success');
+}
+function saveSummaryFields(){
+  appState.cardLayout.summaryFields.classPosition = document.getElementById('sumFieldClassPosition').checked;
+  appState.cardLayout.summaryFields.position = document.getElementById('sumFieldPosition').checked;
+  saveState();
+  showToast('Summary row fields saved.','success');
+}
+function resetCardLayout(){
+  appState.cardLayout = JSON.parse(JSON.stringify(DEFAULT_CARD_LAYOUT));
+  saveState(); renderCardLayoutPanel(); showToast('Result card layout reset to default.');
+}
+
+function applyCardTypography(){
+  const cs = appState.cardStyle;
+  let tag = document.getElementById('dynamicCardTypography');
+  if(!tag){ tag = document.createElement('style'); tag.id='dynamicCardTypography'; document.head.appendChild(tag); }
+  tag.textContent = `
+    .doc-sheet{ --ink:${cs.textColor}; --muted:${cs.mutedColor}; }
+    .doc-sheet table.doc-table th{ text-align:${cs.headerAlign} !important; font-size:${cs.headerFontSize}px !important; ${cs.boldText?'font-weight:700 !important;':''} }
+    .doc-sheet table.doc-table td{ text-align:${cs.bodyAlign} !important; font-size:${cs.bodyFontSize}px !important; ${cs.boldText?'font-weight:600 !important;':''} }
+    .doc-sheet table.doc-info-table td{ ${cs.boldText?'font-weight:700 !important;':''} }
+  `;
+}
+function populateTypographyUI(){
+  const cs = appState.cardStyle;
+  document.getElementById('typoHeaderAlign').value = cs.headerAlign;
+  document.getElementById('typoHeaderSize').value = cs.headerFontSize;
+  document.getElementById('typoHeaderSizeVal').textContent = cs.headerFontSize+'px';
+  document.getElementById('typoBodyAlign').value = cs.bodyAlign;
+  document.getElementById('typoBodySize').value = cs.bodyFontSize;
+  document.getElementById('typoBodySizeVal').textContent = cs.bodyFontSize+'px';
+  document.getElementById('typoTextColor').value = cs.textColor;
+  document.getElementById('typoMutedColor').value = cs.mutedColor;
+  document.getElementById('typoBoldText').checked = cs.boldText;
+}
+function onTypographyInput(){
+  appState.cardStyle.headerAlign = document.getElementById('typoHeaderAlign').value;
+  appState.cardStyle.headerFontSize = parseFloat(document.getElementById('typoHeaderSize').value);
+  appState.cardStyle.bodyAlign = document.getElementById('typoBodyAlign').value;
+  appState.cardStyle.bodyFontSize = parseFloat(document.getElementById('typoBodySize').value);
+  appState.cardStyle.textColor = document.getElementById('typoTextColor').value;
+  appState.cardStyle.mutedColor = document.getElementById('typoMutedColor').value;
+  appState.cardStyle.boldText = document.getElementById('typoBoldText').checked;
+  document.getElementById('typoHeaderSizeVal').textContent = appState.cardStyle.headerFontSize+'px';
+  document.getElementById('typoBodySizeVal').textContent = appState.cardStyle.bodyFontSize+'px';
+  applyCardTypography();
+}
+function saveCardTypography(){ saveState(); showToast('Typography saved.','success'); }
+function resetCardTypography(){
+  appState.cardStyle = JSON.parse(JSON.stringify(DEFAULT_CARD_STYLE));
+  saveState(); populateTypographyUI(); applyCardTypography(); showToast('Typography reset to default.');
+}
+
+function populateStatusLabelsUI(){
+  document.getElementById('passThresholdInput').value = appState.statusLabels.passThreshold;
+  document.getElementById('passLabelInput').value = appState.statusLabels.passLabel;
+  document.getElementById('failLabelInput').value = appState.statusLabels.failLabel;
+}
+function saveStatusLabels(){
+  const t = parseFloat(document.getElementById('passThresholdInput').value);
+  appState.statusLabels.passThreshold = isNaN(t) ? 33 : t;
+  appState.statusLabels.passLabel = document.getElementById('passLabelInput').value.trim() || 'Pass';
+  appState.statusLabels.failLabel = document.getElementById('failLabelInput').value.trim() || 'Fail';
+  saveState();
+  showToast('Status wording saved.','success');
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function renderDashboard(){
+  const students = sessionStudents();
+  const totalEnrolled = students.length;
+  const classes = distinctClasses();
+  const activeClasses = classes.length;
+  let passed = 0;
+  students.forEach(s=>{ const mode=bestAvailableMode(s); if(mode){ const agg=computeStudentAggregate(s,mode); if(agg.pct>=appState.statusLabels.passThreshold) passed++; } });
+
+  document.getElementById('brandStatStudents').textContent = appState.students.length;
+  document.getElementById('brandStatClasses').textContent = new Set(appState.students.map(s=>s.class)).size;
+  document.getElementById('brandStatSessions').textContent = appState.sessionsList.length;
+
+  const cards = [
+    { label:'Total Enrolled', val: totalEnrolled, icon:ICON_REPORT, bg:'var(--teal-pale)', color:'#07615f' },
+    { label:'Active Classes', val: activeClasses, icon:ICON_MERIT, bg:'#EAF1FC', color:'#1D4E8F' },
+    { label:'Passed Students', val: passed, icon:ICON_DASH, bg:'var(--success-bg)', color:'var(--success)' },
+    { label:'Pass Rate', val: totalEnrolled? Math.round(passed/totalEnrolled*100)+'%' : '0%', icon:ICON_CSV, bg:'var(--warning-bg)', color:'var(--warning)' },
+  ];
+  document.getElementById('dashStatCards').innerHTML = cards.map(c=>`
+    <div class="stat-card"><div class="stat-icon" style="background:${c.bg};color:${c.color};">${c.icon}</div><div class="stat-val">${c.val}</div><div class="stat-label">${c.label}</div></div>`).join('');
+
+  const classSelect = document.getElementById('dashPodiumClassSelect');
+  const prevClassVal = classSelect.value || '__summary__';
+  classSelect.innerHTML = '<option value="__summary__">Summary (counts only)</option><option value="__all__">All Classes (show names)</option>' +
+    classes.map(c=>`<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join('');
+  classSelect.value = Array.from(classSelect.options).some(o=>o.value===prevClassVal) ? prevClassVal : '__summary__';
+  const scope = classSelect.value;
+
+  const computeClassRanked = (cls, termKeyForFilter, aggMode)=>{
+    const pool = students.filter(s=>s.class===cls && hasData(s[termKeyForFilter])).map(s=>({ s, agg: computeStudentAggregate(s, aggMode) }));
+    pool.sort((a,b)=> b.agg.pct-a.agg.pct || b.agg.total-a.agg.total);
+    let rank=0, prevPct=null, prevTotal=null;
+    pool.forEach((r,i)=>{
+      if(prevPct===null || r.agg.pct!==prevPct || r.agg.total!==prevTotal){ rank++; }
+      r.rank = rank; prevPct=r.agg.pct; prevTotal=r.agg.total;
+    });
+    return pool.filter(r=>r.rank<=3);
+  };
+  const rankLabels={1:'1st',2:'2nd',3:'3rd'}, slotClass={1:'first',2:'second',3:'third'};
+  const renderPositionSection = (containerId, termLabelForEmpty, termKeyForFilter, aggMode)=>{
+    const wrap = document.getElementById(containerId);
+    if(scope==='__summary__'){
+      const counts={1:0,2:0,3:0};
+      classes.forEach(cls=>{ computeClassRanked(cls, termKeyForFilter, aggMode).forEach(r=>{ counts[r.rank]++; }); });
+      if(counts[1]+counts[2]+counts[3]===0){ wrap.innerHTML = `<div class="empty-state" style="padding:14px;">No ${termLabelForEmpty} data recorded yet.</div>`; return; }
+      wrap.innerHTML = `<div class="podium">${[1,2,3].map(r=>`<div class="podium-slot ${slotClass[r]}"><div class="podium-rank">${rankLabels[r]}</div><div class="podium-name" style="font-size:26px;">${counts[r]}</div><div class="podium-meta">student${counts[r]===1?'':'s'} in ${rankLabels[r]} position</div></div>`).join('')}</div>`;
+      return;
+    }
+    const targetClasses = scope==='__all__' ? classes : [scope];
+    let html='', anyData=false;
+    targetClasses.forEach((cls,idx)=>{
+      const ranked = computeClassRanked(cls, termKeyForFilter, aggMode);
+      if(ranked.length===0) return;
+      anyData = true;
+      const grouped = {};
+      ranked.forEach(r=>{ (grouped[r.rank] = grouped[r.rank] || []).push(r); });
+      const slotsHtml = [1,2,3].filter(r=>grouped[r]).map(r=>{
+        const names = grouped[r].map(x=>escapeHtml(x.s.name)).join('<br>');
+        return `<div class="podium-slot ${slotClass[r]}"><div class="podium-rank">${rankLabels[r]}</div><div class="podium-name">${names}</div><div class="podium-meta">${grouped[r][0].agg.pct.toFixed(1)}%</div></div>`;
+      }).join('');
+      if(scope==='__all__') html += `<div style="font-weight:700;font-size:12.2px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:${idx===0?'0':'16px'} 0 8px;">${escapeHtml(cls)}</div>`;
+      html += `<div class="podium">${slotsHtml}</div>`;
+    });
+    wrap.innerHTML = anyData ? html : `<div class="empty-state" style="padding:14px;">No ${termLabelForEmpty} data recorded yet.</div>`;
+  };
+  renderPositionSection('dashPodiumTerm1', 'Term 1', 'term1', 'term1');
+  renderPositionSection('dashPodiumTerm2', 'Term 2', 'term2', 'term2');
+  renderPositionSection('dashPodiumFinal', 'Final Term', 'term3', 'final');
+
+  const barsWrap = document.getElementById('dashClassBars');
+  if(classes.length===0){ barsWrap.innerHTML = '<div class="empty-state" style="padding:16px;">No classes yet.</div>'; }
+  else {
+    const maxCount = Math.max(...classes.map(c=> students.filter(s=>s.class===c).length));
+    barsWrap.innerHTML = classes.map(c=>{ const n=students.filter(s=>s.class===c).length;
+      return `<div class="class-bar-row"><div class="lbl">${escapeHtml(c)}</div><div class="class-bar-track"><div class="class-bar-fill" style="width:${maxCount?(n/maxCount*100):0}%"></div></div><div class="class-bar-count">${n}</div></div>`; }).join('');
+  }
+
+  const coverageWrap = document.getElementById('dashTermCoverage');
+  const t1c=students.filter(s=>hasData(s.term1)).length, t2c=students.filter(s=>hasData(s.term2)).length, t3c=students.filter(s=>hasData(s.term3)).length;
+  coverageWrap.innerHTML = [['Term 1',t1c],['Term 2',t2c],['Final / Term 3',t3c]].map(([lbl,n])=>`<div class="class-bar-row"><div class="lbl">${lbl}</div><div class="class-bar-track"><div class="class-bar-fill" style="width:${totalEnrolled?(n/totalEnrolled*100):0}%"></div></div><div class="class-bar-count">${n}</div></div>`).join('');
+}
+
+/* ============================================================
+   REPORT ENGINE
+   ============================================================ */
+function setupStudentPortal(){
+  document.getElementById('reportEngineTitle').textContent = 'My Report Card';
+  document.getElementById('reportEngineDesc').textContent = 'Choose a term to view your result card.';
+  document.getElementById('reportClassField').classList.add('hidden');
+  document.getElementById('reportStudentField').classList.add('hidden');
+  document.getElementById('batchBtn').classList.add('hidden');
+  document.getElementById('historyBtn').classList.add('hidden');
+}
+function populateReportControls(){
+  if(currentUser.role==='admin'){
+    const classSelect = document.getElementById('reportClassSelect');
+    const classes = distinctClasses();
+    classSelect.innerHTML = classes.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') || '<option value="">No classes yet</option>';
+    onReportClassChange();
+  }
+  const dateInput = document.getElementById('reportDateInput');
+  if(dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
+  document.getElementById('historyPreviewCard').classList.add('hidden');
+}
+function onReportClassChange(){
+  const cls = document.getElementById('reportClassSelect').value;
+  const studentSelect = document.getElementById('reportStudentSelect');
+  const inClass = sessionStudents().filter(s=>s.class===cls);
+  studentSelect.innerHTML = inClass.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} (Roll ${escapeHtml(s.roll||'—')})</option>`).join('') || '<option value="">No students</option>';
+  onReportStudentChange();
+}
+function currentReportStudent(){
+  if(currentUser.role==='student') return appState.students.find(s=>s.id===currentUser.studentId);
+  const id = document.getElementById('reportStudentSelect').value;
+  return appState.students.find(s=>s.id===id);
+}
+function onReportStudentChange(){
+  const s = currentReportStudent();
+  document.getElementById('attPresent').value = s && s.attendance && s.attendance.present!=null ? s.attendance.present : '';
+  document.getElementById('attTotal').value = s && s.attendance && s.attendance.total!=null ? s.attendance.total : '';
+  document.getElementById('historyPreviewCard').classList.add('hidden');
+}
+
+function buildStudentCardHTML(student, mode, reportDateOverride){
+  const b = appState.branding;
+  const sl = appState.statusLabels;
+  const cl = appState.cardLayout;
+  const L = cl.labels;
+  const modeTitle = cl.titles[mode];
+  const focusTermKey = mode==='term1' ? 'term1' : mode==='term2' ? 'term2' : 'term3';
+  const focusLabel = mode==='term1' ? L.term1 : mode==='term2' ? L.term2 : L.term3;
+  const focusStat = termOwnStats(student, focusTermKey);
+  const focusRank = studentTermRank(student, focusTermKey);
+  const focusGrade = getGrade(focusStat.pct);
+  const isPass = focusStat.pct >= sl.passThreshold;
+  const statusColor = isPass ? 'var(--success)' : 'var(--danger)';
+  const statusText = isPass ? sl.passLabel : sl.failLabel;
+  const rankDisplay = focusRank.rank ? `${ordinal(focusRank.rank)} of ${focusRank.classSize}` : '—';
+
+  // ---- Subject table: fully driven by appState.cardLayout.columns[mode] ----
+  let theadCols=[L.subject], bodyRows='', footRow='', subjectsForTable;
+  if(mode==='term1'){
+    const c = cl.columns.term1;
+    subjectsForTable = Object.keys(student.term1||{});
+    if(c.totalMarks) theadCols.push(L.totalMarks);
+    theadCols.push(`${L.term1} ${L.obtained}`);
+    if(c.percentage) theadCols.push(`${L.term1} ${L.percentage}`);
+    if(c.grade) theadCols.push(`${L.term1} ${L.grade}`);
+    bodyRows = subjectsForTable.map(sub=>{
+      const v = student.term1[sub]; const max = getSubjectMax(sub, student.class);
+      const pct = (v!=null && !isNaN(v)) ? (v/max*100) : null;
+      let tds = `<td>${escapeHtml(sub)}</td>`;
+      if(c.totalMarks) tds += `<td>${max}</td>`;
+      tds += `<td>${v!=null?v:'—'}</td>`;
+      if(c.percentage) tds += `<td>${pct!=null?pct.toFixed(2)+'%':'—'}</td>`;
+      if(c.grade) tds += `<td>${pct!=null?getGrade(pct):'—'}</td>`;
+      return `<tr>${tds}</tr>`;
+    }).join('');
+    let footTds = `<td>Total</td>`;
+    if(c.totalMarks) footTds += `<td>${focusStat.max}</td>`;
+    footTds += `<td>${focusStat.total}</td>`;
+    if(c.percentage) footTds += `<td>${focusStat.pct.toFixed(2)}%</td>`;
+    if(c.grade) footTds += `<td>${focusGrade}</td>`;
+    footRow = `<tr>${footTds}</tr>`;
+  } else if(mode==='term2'){
+    const c = cl.columns.term2;
+    subjectsForTable = unionSubjects(student, ['term1','term2']);
+    if(c.t1TotalMarks) theadCols.push(`${L.term1} ${L.totalMarks}`);
+    theadCols.push(`${L.term1} ${L.obtained}`);
+    if(c.t1Percentage) theadCols.push(`${L.term1} ${L.percentage}`);
+    if(c.t1Grade) theadCols.push(`${L.term1} ${L.grade}`);
+    if(c.t2TotalMarks) theadCols.push(`${L.term2} ${L.totalMarks}`);
+    theadCols.push(`${L.term2} ${L.obtained}`);
+    if(c.t2Percentage) theadCols.push(`${L.term2} ${L.percentage}`);
+    if(c.t2Grade) theadCols.push(`${L.term2} ${L.grade}`);
+    bodyRows = subjectsForTable.map(sub=>{
+      const v1=student.term1[sub], v2=student.term2[sub]; const max=getSubjectMax(sub, student.class);
+      const p1=(v1!=null&&!isNaN(v1))?(v1/max*100):null, p2=(v2!=null&&!isNaN(v2))?(v2/max*100):null;
+      let tds = `<td>${escapeHtml(sub)}</td>`;
+      if(c.t1TotalMarks) tds += `<td>${max}</td>`;
+      tds += `<td>${v1!=null?v1:'—'}</td>`;
+      if(c.t1Percentage) tds += `<td>${p1!=null?p1.toFixed(2)+'%':'—'}</td>`;
+      if(c.t1Grade) tds += `<td>${p1!=null?getGrade(p1):'—'}</td>`;
+      if(c.t2TotalMarks) tds += `<td>${max}</td>`;
+      tds += `<td>${v2!=null?v2:'—'}</td>`;
+      if(c.t2Percentage) tds += `<td>${p2!=null?p2.toFixed(2)+'%':'—'}</td>`;
+      if(c.t2Grade) tds += `<td>${p2!=null?getGrade(p2):'—'}</td>`;
+      return `<tr>${tds}</tr>`;
+    }).join('');
+    const t1own = termOwnStats(student,'term1'), t2own = termOwnStats(student,'term2');
+    let footTds = `<td>Total</td>`;
+    if(c.t1TotalMarks) footTds += `<td>${t1own.max}</td>`;
+    footTds += `<td>${t1own.total}</td>`;
+    if(c.t1Percentage) footTds += `<td>${t1own.pct.toFixed(2)}%</td>`;
+    if(c.t1Grade) footTds += `<td>${getGrade(t1own.pct)}</td>`;
+    if(c.t2TotalMarks) footTds += `<td>${t2own.max}</td>`;
+    footTds += `<td>${t2own.total}</td>`;
+    if(c.t2Percentage) footTds += `<td>${t2own.pct.toFixed(2)}%</td>`;
+    if(c.t2Grade) footTds += `<td>${getGrade(t2own.pct)}</td>`;
+    footRow = `<tr>${footTds}</tr>`;
+  } else {
+    const c = cl.columns.final;
+    const agg = computeStudentAggregate(student, 'final');
+    subjectsForTable = agg.subjects;
+    if(c.totalMarks) theadCols.push(L.totalMarks);
+    if(c.term1) theadCols.push(L.term1);
+    if(c.term1Grade) theadCols.push(`${L.term1} ${L.grade}`);
+    if(c.term2) theadCols.push(L.term2);
+    if(c.term2Grade) theadCols.push(`${L.term2} ${L.grade}`);
+    if(c.term3) theadCols.push(L.term3);
+    if(c.term3Grade) theadCols.push(`${L.term3} ${L.grade}`);
+    if(c.totalOb) theadCols.push(L.totalOb);
+    if(c.totalMax) theadCols.push(L.totalMax);
+    if(c.percentage) theadCols.push(L.percentage);
+    if(c.finalGrade) theadCols.push(L.finalGrade);
+    bodyRows = subjectsForTable.map(sub=>{
+      const v1=student.term1[sub], v2=student.term2[sub], v3=student.term3[sub]; const max=getSubjectMax(sub, student.class);
+      const p1=(v1!=null&&!isNaN(v1))?(v1/max*100):null, p2=(v2!=null&&!isNaN(v2))?(v2/max*100):null, p3=(v3!=null&&!isNaN(v3))?(v3/max*100):null;
+      const totalOb = [v1,v2,v3].reduce((acc,v)=>acc+(v!=null&&!isNaN(v)?v:0),0);
+      const totalMax = max*3;
+      const pct = totalMax? (totalOb/totalMax*100):0;
+      let tds = `<td>${escapeHtml(sub)}</td>`;
+      if(c.totalMarks) tds += `<td>${max}</td>`;
+      if(c.term1) tds += `<td>${v1!=null?v1:'—'}</td>`;
+      if(c.term1Grade) tds += `<td>${p1!=null?getGrade(p1):'—'}</td>`;
+      if(c.term2) tds += `<td>${v2!=null?v2:'—'}</td>`;
+      if(c.term2Grade) tds += `<td>${p2!=null?getGrade(p2):'—'}</td>`;
+      if(c.term3) tds += `<td>${v3!=null?v3:'—'}</td>`;
+      if(c.term3Grade) tds += `<td>${p3!=null?getGrade(p3):'—'}</td>`;
+      if(c.totalOb) tds += `<td>${totalOb.toFixed(totalOb%1?1:0)}</td>`;
+      if(c.totalMax) tds += `<td>${totalMax}</td>`;
+      if(c.percentage) tds += `<td>${pct.toFixed(2)}%</td>`;
+      if(c.finalGrade) tds += `<td>${getGrade(pct)}</td>`;
+      return `<tr>${tds}</tr>`;
+    }).join('');
+    const grandMax = subjectsMaxSum(subjectsForTable, student.class)*3;
+    let footTds = `<td>Total</td>`;
+    if(c.totalMarks) footTds += `<td>—</td>`;
+    if(c.term1) footTds += `<td>${agg.t1.total}</td>`;
+    if(c.term1Grade) footTds += `<td>${getGrade(agg.t1.total/(agg.t1.max||1)*100)}</td>`;
+    if(c.term2) footTds += `<td>${agg.t2.total}</td>`;
+    if(c.term2Grade) footTds += `<td>${getGrade(agg.t2.total/(agg.t2.max||1)*100)}</td>`;
+    if(c.term3) footTds += `<td>${agg.t3.total}</td>`;
+    if(c.term3Grade) footTds += `<td>${getGrade(agg.t3.total/(agg.t3.max||1)*100)}</td>`;
+    if(c.totalOb) footTds += `<td>${agg.total.toFixed(agg.total%1?1:0)}</td>`;
+    if(c.totalMax) footTds += `<td>${grandMax}</td>`;
+    if(c.percentage) footTds += `<td>${agg.pct.toFixed(2)}%</td>`;
+    if(c.finalGrade) footTds += `<td>${getGrade(agg.pct)}</td>`;
+    footRow = `<tr>${footTds}</tr>`;
+    var finalAgg = agg; // used below for the Final Year-End Aggregate Matrix
+  }
+
+  // ---- Term Performance Summary (standalone per-term totals + rank; Term 1/2/3 rows as applicable) ----
+  const termKeys = mode==='term1' ? ['term1'] : mode==='term2' ? ['term1','term2'] : ['term1','term2','term3'];
+  let summaryHTML='';
+  if(termKeys.length>1){
+    const rowsHtml = termKeys.map(tk=>{
+      const tr = studentTermRank(student, tk);
+      const label = tk==='term1'?L.term1:tk==='term2'?L.term2:L.term3;
+      return `<tr><td>${label}</td><td>${tr.total}/${tr.max}</td><td>${tr.pct.toFixed(2)}%</td><td>${tr.rank?`${ordinal(tr.rank)} of ${tr.classSize}`:'—'}</td></tr>`;
+    }).join('');
+    summaryHTML = `
+    <div class="doc-section-title">${escapeHtml(L.sectionTermSummary)}</div>
+    <table class="doc-table">
+      <thead><tr><th>Term</th><th>${escapeHtml(L.totalMarks)}</th><th>${escapeHtml(L.percentage)}</th><th>Rank / Position</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
+  }
+
+  // ---- Final Year-End Aggregate Matrix (final mode only — true 3-term cumulative, kept separate from the top summary) ----
+  let matrixHTML='';
+  if(mode==='final'){
+    const promoPass = finalAgg.pct >= sl.passThreshold;
+    matrixHTML = `
+    <div class="doc-section-title">${escapeHtml(L.sectionFinalMatrix)}</div>
+    <div class="doc-summary-row">
+      <div class="doc-summary-box"><b>${finalAgg.total.toFixed(finalAgg.total%1?1:0)} / ${finalAgg.max}</b><span>Cumulative Total</span></div>
+      <div class="doc-summary-box"><b>${finalAgg.pct.toFixed(2)}%</b><span>Final Year %</span></div>
+      <div class="doc-summary-box"><b>${getGrade(finalAgg.pct)}</b><span>${escapeHtml(L.finalGrade)}</span></div>
+      <div class="doc-summary-box"><b style="color:${promoPass?'var(--success)':'var(--danger)'}">${promoPass?sl.passLabel:sl.failLabel}</b><span>Promotion Status</span></div>
+    </div>`;
+  }
+
+  // ---- Subject-wise Remarks — now shown on every mode, scoped to the terms that mode covers ----
+  let remarksRows;
+  if(mode==='term1'){
+    remarksRows = subjectsForTable.map(sub=>{
+      const v=student.term1[sub], max=getSubjectMax(sub, student.class);
+      const pct=(v!=null&&!isNaN(v))?(v/max*100):null;
+      return `<tr><td>${escapeHtml(sub)}</td><td>${pct!=null?getRemark(pct):'—'}</td></tr>`;
+    }).join('');
+    var remarksTableHTML = `<div class="doc-section-title">${escapeHtml(L.sectionRemarks)}</div><table class="doc-table"><thead><tr><th>${escapeHtml(L.subject)}</th><th>${L.term1} Remarks</th></tr></thead><tbody>${remarksRows}</tbody></table>`;
+  } else if(mode==='term2'){
+    remarksRows = subjectsForTable.map(sub=>{
+      const v1=student.term1[sub], v2=student.term2[sub], max=getSubjectMax(sub, student.class);
+      const p1=(v1!=null&&!isNaN(v1))?(v1/max*100):null, p2=(v2!=null&&!isNaN(v2))?(v2/max*100):null;
+      return `<tr><td>${escapeHtml(sub)}</td><td>${p1!=null?getRemark(p1):'—'}</td><td>${p2!=null?getRemark(p2):'—'}</td></tr>`;
+    }).join('');
+    var remarksTableHTML = `<div class="doc-section-title">${escapeHtml(L.sectionRemarks)}</div><table class="doc-table"><thead><tr><th>${escapeHtml(L.subject)}</th><th>${L.term1} Remarks</th><th>${L.term2} Remarks</th></tr></thead><tbody>${remarksRows}</tbody></table>`;
+  } else {
+    remarksRows = subjectsForTable.map(sub=>{
+      const v1=student.term1[sub], v2=student.term2[sub], v3=student.term3[sub], max=getSubjectMax(sub, student.class);
+      const totalOb=(v1!=null&&!isNaN(v1)?v1:0)+(v2!=null&&!isNaN(v2)?v2:0)+(v3!=null&&!isNaN(v3)?v3:0);
+      const totalMax=max*3, pct= totalMax? totalOb/totalMax*100:0;
+      const r1 = (v1!=null&&!isNaN(v1)) ? getRemark(v1/max*100) : '—';
+      const r2 = (v2!=null&&!isNaN(v2)) ? getRemark(v2/max*100) : '—';
+      const r3 = (v3!=null&&!isNaN(v3)) ? getRemark(v3/max*100) : '—';
+      return `<tr><td>${escapeHtml(sub)}</td><td>${r1}</td><td>${r2}</td><td>${r3}</td><td>${getRemark(pct)}</td></tr>`;
+    }).join('');
+    var remarksTableHTML = `<div class="doc-section-title">${escapeHtml(L.sectionRemarks)}</div><table class="doc-table"><thead><tr><th>${escapeHtml(L.subject)}</th><th>${L.term1} Remarks</th><th>${L.term2} Remarks</th><th>${L.term3} Remarks</th><th>Aggregate Year Remarks</th></tr></thead><tbody>${remarksRows}</tbody></table>`;
+  }
+
+  const att = student.attendance || {};
+  const attendanceHTML = mode==='final' ? `<div class="doc-attendance"><b>Attendance Profile</b> ${att.present!=null&&att.present!==''?att.present:'______________'} / ${att.total!=null&&att.total!==''?att.total:'______________'} Days Active</div>` : '';
+
+  const attParts = [];
+  if(mode==='term1'){
+    if(student.term1Attendance!=null) attParts.push(`${L.term1}: ${student.term1Attendance}%`);
+  } else if(mode==='term2'){
+    if(student.term1Attendance!=null) attParts.push(`${L.term1}: ${student.term1Attendance}%`);
+    if(student.term2Attendance!=null) attParts.push(`${L.term2}: ${student.term2Attendance}%`);
+  } else {
+    if(student.term1Attendance!=null) attParts.push(`${L.term1}: ${student.term1Attendance}%`);
+    if(student.term2Attendance!=null) attParts.push(`${L.term2}: ${student.term2Attendance}%`);
+    if(student.term3Attendance!=null) attParts.push(`${L.term3}: ${student.term3Attendance}%`);
+    const attVals = [student.term1Attendance, student.term2Attendance, student.term3Attendance].filter(v=>v!=null);
+    if(attVals.length) attParts.push(`Average: ${(attVals.reduce((a,b)=>a+b,0)/attVals.length).toFixed(1)}%`);
+  }
+  const attendancePctHTML = attParts.length ? `<div class="doc-attendance-pct"><b>Attendance</b> ${attParts.join(' &nbsp;·&nbsp; ')}</div>` : '';
+
+  const overallBasisPct = mode==='final' ? finalAgg.pct : focusStat.pct;
+  const overallRemarkText = overallBasisPct>=90?'Outstanding performance across all subjects.': overallBasisPct>=70?'Consistent and commendable performance.': overallBasisPct>=sl.passThreshold?'Satisfactory performance; room for improvement.':'Requires focused improvement and additional support.';
+
+  const sigHtml = (b.signatures||[]).filter(s=>s.enabled).map(s=>{
+    const img = s.imageKey ? b[s.imageKey] : (b.customSigImages && b.customSigImages[s.id]);
+    return `<div class="doc-sign-box ${img?'has-img':''}">${img?`<img src="${img}">`:''}<div class="doc-sign-line">${escapeHtml(s.label)}</div></div>`;
+  }).join('');
+
+  return `
+  <div class="${docSheetClasses(true)}" style="${docSheetStyleAttr()}">
+    <div class="doc-ledger-bg"></div>
+    ${b.cap ? `<div class="doc-watermark"><img src="${b.cap}"></div>` : ''}
+    ${buildDocHeadHtml(b)}
+    <div class="doc-title-bar">${escapeHtml(modeTitle)}</div>
+    <table class="doc-info-table">
+      <tr><th>Student Name</th><td>${escapeHtml(student.name)}</td><th>Father's Name</th><td>${escapeHtml(student.fatherName||'—')}</td></tr>
+      <tr><th>GR No.</th><td>${escapeHtml(student.grNo||'—')}</td><th>Class</th><td>${escapeHtml(student.class)}</td></tr>
+      <tr><th>Section</th><td>${escapeHtml(student.section||'—')}</td><th>Roll No.</th><td>${escapeHtml(student.roll||'—')}</td></tr>
+      <tr><th>Academic Session</th><td>${escapeHtml(student.session)}</td><th>Report Date</th><td>${reportDateOverride ? escapeHtml(reportDateOverride) : new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td></tr>
+    </table>
+    <table class="doc-table">
+      <thead><tr>${theadCols.map(c=>`<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+      <tbody>${bodyRows || `<tr><td colspan="${theadCols.length}">No subject data recorded for this term.</td></tr>`}</tbody>
+      <tfoot>${footRow}</tfoot>
+    </table>
+    <div class="doc-summary-row">
+      <div class="doc-summary-box"><b>${focusStat.total.toFixed(focusStat.total%1?1:0)}/${focusStat.max}</b><span>${focusLabel} ${escapeHtml(L.marks)}</span></div>
+      <div class="doc-summary-box"><b>${focusStat.pct.toFixed(2)}%</b><span>${escapeHtml(L.percentage)}</span></div>
+      <div class="doc-summary-box"><b>${focusGrade}</b><span>${escapeHtml(L.grade)}</span></div>
+      ${cl.summaryFields.classPosition ? `<div class="doc-summary-box"><b>${rankDisplay}</b><span>${escapeHtml(L.classPosition)}</span></div>` : ''}
+      ${cl.summaryFields.position ? `<div class="doc-summary-box"><b>${focusRank.rank?ordinal(focusRank.rank):'—'}</b><span>${escapeHtml(L.position)}</span></div>` : ''}
+      <div class="doc-summary-box"><b style="color:${statusColor}">${statusText}</b><span>${escapeHtml(L.resultStatus)}</span></div>
+    </div>
+    ${summaryHTML}
+    ${matrixHTML}
+    ${attendancePctHTML}
+    ${remarksTableHTML}
+    ${attendanceHTML}
+    <div class="doc-remarks">Overall Remarks: ${overallRemarkText}</div>
+    <div class="doc-sign-row">${sigHtml}</div>
+    ${buildDocFootHtml(b)}
+  </div>`;
+}
+
+function saveAttendanceForCurrent(){
+  const s = currentReportStudent();
+  if(!s || currentUser.role==='student') return;
+  const p = document.getElementById('attPresent').value;
+  const t = document.getElementById('attTotal').value;
+  s.attendance = { present: p===''?null:parseFloat(p), total: t===''?null:parseFloat(t) };
+  saveState();
+}
+function currentReportDateFormatted(){
+  const raw = document.getElementById('reportDateInput').value;
+  if(!raw) return null;
+  const d = new Date(raw+'T00:00:00');
+  return isNaN(d) ? null : d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function generateSingleReportCard(){
+  const mode = document.getElementById('reportTermSelect').value;
+  saveAttendanceForCurrent();
+  const student = currentReportStudent();
+  if(!student){ showToast('No student selected.','error'); return; }
+  document.getElementById('reportPreviewArea').innerHTML = buildStudentCardHTML(student, mode, currentReportDateFormatted());
+  document.getElementById('reportPreviewCard').classList.remove('hidden');
+  document.getElementById('reportPreviewCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function generateClassBatchSet(){
+  const cls = document.getElementById('reportClassSelect').value;
+  const mode = document.getElementById('reportTermSelect').value;
+  const inClass = sessionStudents().filter(s=>s.class===cls);
+  if(inClass.length===0){ showToast('No students in selected class.','error'); return; }
+  const dateOverride = currentReportDateFormatted();
+  document.getElementById('reportPreviewArea').innerHTML = inClass.map(s=>buildStudentCardHTML(s, mode, dateOverride)).join('');
+  document.getElementById('reportPreviewCard').classList.remove('hidden');
+  document.getElementById('reportPreviewCard').scrollIntoView({behavior:'smooth', block:'start'});
+  showToast(`Batch set generated for ${inClass.length} student(s).`,'success');
+}
+function renderStudentHistory(){
+  const student = currentReportStudent();
+  if(!student){ showToast('Select a student first.','error'); return; }
+  if(!student.grNo){ showToast('This student has no GR No on file — add one via CSV to enable multi-session history.','error'); return; }
+  const linked = appState.students.filter(s=>s.grNo===student.grNo).sort((a,b)=> a.session.localeCompare(b.session));
+  const wrap = document.getElementById('historyPreviewArea');
+  wrap.innerHTML = '<table class="data-table"><thead><tr><th>Session</th><th>Class</th><th>Section</th><th>Best Available Term</th><th>Percentage</th><th>Grade</th></tr></thead><tbody>' +
+    linked.map(s=>{
+      const mode = bestAvailableMode(s);
+      const agg = mode ? computeStudentAggregate(s, mode) : null;
+      return `<tr><td>${escapeHtml(s.session)}</td><td>${escapeHtml(s.class)}</td><td>${escapeHtml(s.section||'—')}</td><td>${mode?termLabel(mode==='final'?'term3':mode):'—'}</td><td>${agg?agg.pct.toFixed(1)+'%':'—'}</td><td>${agg?getGrade(agg.pct):'—'}</td></tr>`;
+    }).join('') + '</tbody></table>';
+  document.getElementById('historyPreviewCard').classList.remove('hidden');
+  document.getElementById('historyPreviewCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ============================================================
+   MERIT REGISTER
+   ============================================================ */
+function populateMeritControls(){
+  const classSelect = document.getElementById('meritClassSelect');
+  const classes = distinctClasses();
+  classSelect.innerHTML = '<option value="__all__">All Classes</option>' + classes.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+}
+let lastMeritRows = [];
+function generateMeritRegister(){
+  const cls = document.getElementById('meritClassSelect').value;
+  const mode = document.getElementById('meritTermSelect').value;
+  let pool = sessionStudents().filter(s=> cls==='__all__' ? true : s.class===cls);
+  pool = pool.filter(s=>{ if(mode==='term1') return hasData(s.term1); if(mode==='term2') return hasData(s.term1)||hasData(s.term2); return hasData(s.term3)||hasData(s.term2)||hasData(s.term1); });
+  const rows = pool.map(s=>{ const agg=computeStudentAggregate(s, mode); return { s, total: agg.total, max: agg.max, pct: agg.pct }; })
+    .sort((a,b)=> b.pct-a.pct || b.total-a.total);
+  let rank=0, prevPct=null, prevTotal=null;
+  rows.forEach((r,i)=>{ if(prevPct===null||r.pct!==prevPct||r.total!==prevTotal){ rank++; } r.rank=rank; prevPct=r.pct; prevTotal=r.total; });
+  lastMeritRows = rows;
+
+  const b = appState.branding;
+  const html = `
+  <div class="doc-sheet" style="max-width:100%;">
+    <div class="doc-ledger-bg"></div>
+    ${b.cap ? `<div class="doc-watermark"><img src="${b.cap}"></div>` : ''}
+    ${buildDocHeadHtml(b)}
+    <div class="doc-title-bar">Class Merit Register — ${escapeHtml(cls==='__all__'?'All Classes':cls)} — ${termLabel(mode==='final'?'term3':mode)} — ${escapeHtml(appState.currentSession)}</div>
+    <table class="doc-table">
+      <thead><tr><th>Rank</th><th>Name</th><th>GR No</th><th>Roll</th><th>Class</th><th>Total</th><th>Percentage</th><th>Grade</th></tr></thead>
+      <tbody>${rows.length ? rows.map(r=>`<tr><td>${r.rank}</td><td>${escapeHtml(r.s.name)}</td><td>${escapeHtml(r.s.grNo||'—')}</td><td>${escapeHtml(r.s.roll||'—')}</td><td>${escapeHtml(r.s.class)}</td><td>${r.total}/${r.max}</td><td>${r.pct.toFixed(1)}%</td><td>${getGrade(r.pct)}</td></tr>`).join('') : '<tr><td colspan="8">No eligible records for this term.</td></tr>'}</tbody>
+    </table>
+    ${buildDocFootHtml(b)}
+  </div>`;
+  document.getElementById('meritPreviewArea').innerHTML = html;
+  document.getElementById('meritPreviewCard').classList.remove('hidden');
+  document.getElementById('meritPreviewCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function exportMeritCsv(){
+  if(lastMeritRows.length===0){ showToast('Generate the merit register first.','error'); return; }
+  let csv = 'Rank,Name,GR No,Roll,Class,Total,Max,Percentage,Grade\n';
+  lastMeritRows.forEach(r=>{ csv += `${r.rank},"${r.s.name}",${r.s.grNo||''},${r.s.roll||''},"${r.s.class}",${r.total},${r.max},${r.pct.toFixed(1)},${getGrade(r.pct)}\n`; });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'merit-register.csv'; a.click();
+}
+
+/* ============================================================
+   TRANSFER CERTIFICATE
+   ============================================================ */
+function populateTcControls(){
+  const classSelect = document.getElementById('tcClassSelect');
+  classSelect.innerHTML = distinctClasses().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') || '<option value="">No classes yet</option>';
+  onTcClassChange();
+}
+function onTcClassChange(){
+  const cls = document.getElementById('tcClassSelect').value;
+  const studentSelect = document.getElementById('tcStudentSelect');
+  const inClass = sessionStudents().filter(s=>s.class===cls);
+  studentSelect.innerHTML = inClass.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} (Roll ${escapeHtml(s.roll||'—')})</option>`).join('') || '<option value="">No students</option>';
+  document.getElementById('tcClassStudied').value = cls;
+}
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d); return isNaN(dt) ? d : dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function generateTC(){
+  const id = document.getElementById('tcStudentSelect').value;
+  const student = appState.students.find(s=>s.id===id);
+  if(!student){ showToast('Select a student first.','error'); return; }
+  const b = appState.branding;
+  const dob=document.getElementById('tcDob').value, adm=document.getElementById('tcAdmission').value, leave=document.getElementById('tcLeaving').value;
+  const fees=document.getElementById('tcFeesStatus').value, conduct=document.getElementById('tcConduct').value;
+  const classStudied=document.getElementById('tcClassStudied').value || student.class;
+  const reason=document.getElementById('tcReason').value || 'Not specified';
+  const serial = 'TC-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*9000);
+
+  const html = `
+  <div class="${docSheetClasses(true)}" style="${docSheetStyleAttr()}">
+    <div class="doc-ledger-bg"></div>
+    ${b.cap ? `<div class="doc-watermark"><img src="${b.cap}"></div>` : ''}
+    ${buildDocHeadHtml(b)}
+    <div class="doc-title-bar">Transfer / School Leaving Certificate</div>
+    <div class="doc-info-grid" style="grid-template-columns:1fr;"><div><b>Certificate No.</b> ${serial}</div></div>
+    <div class="doc-info-grid">
+      <div><b>Student Name</b> ${escapeHtml(student.name)}</div>
+      <div><b>Father's Name</b> ${escapeHtml(student.fatherName||'—')}</div>
+      <div><b>GR No.</b> ${escapeHtml(student.grNo||'—')}</div>
+      <div><b>Class Last Studied In</b> ${escapeHtml(classStudied)}</div>
+      <div><b>Roll No.</b> ${escapeHtml(student.roll||'—')}</div>
+      <div><b>Date of Birth</b> ${fmtDate(dob)}</div>
+      <div><b>Date of Admission</b> ${fmtDate(adm)}</div>
+      <div><b>Date of Leaving</b> ${fmtDate(leave)}</div>
+      <div><b>Fees Status</b> ${fees}</div>
+      <div><b>Conduct</b> ${conduct}</div>
+      <div><b>Reason for Leaving</b> ${escapeHtml(reason)}</div>
+    </div>
+    <div class="doc-remarks">This is to certify that the above-named student was a bona fide student of this institution and has been granted this Transfer Certificate upon leaving. All school records pertaining to the student remain on file at the institution.</div>
+    <div class="doc-sign-row">
+      <div class="doc-sign-box ${b.teacherSig?'has-img':''}">${b.teacherSig?`<img src="${b.teacherSig}">`:''}<div class="doc-sign-line">Class Teacher</div></div>
+      <div class="doc-sign-box"><div class="doc-sign-line">Parent / Guardian</div></div>
+      <div class="doc-sign-box ${b.principalSig?'has-img':''}">${b.principalSig?`<img src="${b.principalSig}">`:''}<div class="doc-sign-line">Principal</div></div>
+    </div>
+    ${buildDocFootHtml(b)}
+  </div>`;
+  document.getElementById('tcPreviewArea').innerHTML = html;
+  document.getElementById('tcPreviewCard').classList.remove('hidden');
+  document.getElementById('tcPreviewCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ============================================================
+   PDF DOWNLOAD
+   ============================================================ */
+function downloadPdf(elementId, filenamePrefix, landscape){
+  const el = document.getElementById(elementId);
+  if(!el || !el.innerHTML.trim()){ showToast('Nothing to export yet — generate a document first.','error'); return; }
+  const cfg = PAGE_SIZES[currentPageSize()] || PAGE_SIZES.A4;
+  const ps = appState.pageSettings;
+  const opt = { margin:[ps.marginTop, ps.marginLeft, ps.marginBottom, ps.marginRight], filename:`${filenamePrefix}-${Date.now()}.pdf`, image:{type:'png'}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:cfg.jspdf,orientation: landscape?'landscape':'portrait'}, pagebreak:{mode:['css','legacy']} };
+  showToast('Preparing PDF…');
+  html2pdf().set(opt).from(el).save();
+}
+
+/* ============================================================
+   BRANDING
+   ============================================================ */
+function applyBrandingToUI(){
+  const b = appState.branding;
+  document.getElementById('brandSchoolName').value = b.schoolName || '';
+  document.getElementById('brandSchoolSub').value = b.schoolSub || '';
+  document.getElementById('brandFooterText').value = b.footerText || '';
+  document.getElementById('brandPageSize').value = currentPageSize();
+  document.getElementById('marginTopInput').value = appState.pageSettings.marginTop;
+  document.getElementById('marginBottomInput').value = appState.pageSettings.marginBottom;
+  document.getElementById('marginLeftInput').value = appState.pageSettings.marginLeft;
+  document.getElementById('marginRightInput').value = appState.pageSettings.marginRight;
+  document.getElementById('sbSchoolName').innerHTML = `${escapeHtml(b.schoolName||'School Management System')}<small>Cloud Portal</small>`;
+  setThumb('thumbLogo', b.logo); setThumb('thumbCap', b.cap); setThumb('thumbPrincipalSig', b.principalSig); setThumb('thumbTeacherSig', b.teacherSig); setThumb('thumbExamSig', b.examSig);
+  if(b.logo){ document.getElementById('sbLogoImg').src=b.logo; document.getElementById('sbLogoImg').classList.remove('hidden'); document.getElementById('sbLogoFallback').classList.add('hidden'); }
+}
+function setThumb(id, src){ const el=document.getElementById(id); if(!el) return; el.innerHTML = src ? `<img src="${src}">` : ICON_IMG; }
+function handleBrandUpload(input, key, thumbId){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    appState.branding[key] = e.target.result; setThumb(thumbId, e.target.result);
+    if(key==='logo'){ document.getElementById('sbLogoImg').src=e.target.result; document.getElementById('sbLogoImg').classList.remove('hidden'); document.getElementById('sbLogoFallback').classList.add('hidden'); }
+    saveState(); showToast('Image loaded — click "Save Branding" to persist.');
+  };
+  reader.readAsDataURL(file);
+}
+function saveBranding(){
+  appState.branding.schoolName = document.getElementById('brandSchoolName').value.trim();
+  appState.branding.schoolSub = document.getElementById('brandSchoolSub').value.trim();
+  appState.branding.footerText = document.getElementById('brandFooterText').value.trim();
+  appState.pageSettings.size = document.getElementById('brandPageSize').value;
+  appState.pageSettings.marginTop = parseFloat(document.getElementById('marginTopInput').value) || 0;
+  appState.pageSettings.marginBottom = parseFloat(document.getElementById('marginBottomInput').value) || 0;
+  appState.pageSettings.marginLeft = parseFloat(document.getElementById('marginLeftInput').value) || 0;
+  appState.pageSettings.marginRight = parseFloat(document.getElementById('marginRightInput').value) || 0;
+  saveState(); applyBrandingToUI(); applyPrintMargins(); showToast('Branding saved.','success');
+}
+function applyPrintMargins(){
+  const ps = appState.pageSettings;
+  let styleTag = document.getElementById('dynamicPrintMargins');
+  if(!styleTag){ styleTag = document.createElement('style'); styleTag.id='dynamicPrintMargins'; document.head.appendChild(styleTag); }
+  styleTag.textContent = `@page{ margin: ${ps.marginTop}mm ${ps.marginRight}mm ${ps.marginBottom}mm ${ps.marginLeft}mm; }`;
+}
+
+function renderSignatureConfig(){
+  const wrap = document.getElementById('signatureConfigWrap');
+  const sigs = appState.branding.signatures || [];
+  wrap.innerHTML = sigs.map((s,i)=>`
+    <div class="upload-row">
+      <input type="checkbox" style="width:18px;height:18px;flex-shrink:0;" ${s.enabled?'checked':''} onchange="toggleSignature(${i}, this.checked)">
+      <div class="upload-info">
+        <input type="text" value="${escapeHtml(s.label)}" style="border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13.4px;font-weight:600;width:100%;max-width:260px;" onchange="renameSignature(${i}, this.value)">
+        <span>${s.imageKey ? 'Uses the uploaded signature image above, if any' : 'Blank line only, unless a custom image is uploaded'}</span>
+      </div>
+      ${!s.imageKey ? `<button class="btn btn-outline btn-sm" onclick="document.getElementById('customSigUpload_${s.id}').click()">Upload Image</button><input type="file" accept="image/*" id="customSigUpload_${s.id}" class="hidden" onchange="handleCustomSigUpload(this,'${s.id}')">` : ''}
+      ${sigs.length>1 ? `<button class="btn btn-danger btn-sm" onclick="removeSignature(${i})">Remove</button>` : ''}
+    </div>`).join('');
+}
+function toggleSignature(i, val){ appState.branding.signatures[i].enabled = val; }
+function renameSignature(i, val){ appState.branding.signatures[i].label = val.trim() || appState.branding.signatures[i].label; }
+function removeSignature(i){ appState.branding.signatures.splice(i,1); renderSignatureConfig(); }
+function addCustomSignature(){
+  const label = document.getElementById('newSigLabel').value.trim();
+  if(!label){ showToast('Enter a label for the signature line.','error'); return; }
+  appState.branding.signatures.push({ id: uuid(), label, enabled:true, imageKey:null });
+  document.getElementById('newSigLabel').value='';
+  renderSignatureConfig();
+}
+function handleCustomSigUpload(input, sigId){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{ appState.branding.customSigImages[sigId] = e.target.result; saveState(); showToast('Custom signature image loaded — click "Save Signature Lines" to persist.'); };
+  reader.readAsDataURL(file);
+}
+function saveSignatureConfig(){ saveState(); showToast('Signature lines saved.','success'); }
+
+/* ============================================================
+   SUPABASE SYNC
+   ============================================================ */
+/* Fill these in once you've created your free Supabase project, so every
+   visitor to this hosted link automatically connects to the SAME shared
+   dataset — no per-visitor setup needed. Anon keys are safe to expose in
+   client-side code; that's what they're designed for (protect writes with
+   Row Level Security policies in Supabase, not by hiding this key). */
+const DEFAULT_SUPABASE_URL = 'https://zybvdhoozwnollgrpsxb.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5YnZkaG9vendub2xsZ3Jwc3hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2OTk1NjYsImV4cCI6MjA5OTI3NTU2Nn0.H8Wl-BbDNg7Ln8BJ36Mszm4InIuw-D4g0D9TQL_NL4Y';
+
+function updateCloudStatus(connected){ document.getElementById('cloudDot').classList.toggle('on', connected); document.getElementById('cloudStatusText').textContent = connected ? 'Cloud: Connected' : 'Cloud: Not Connected'; }
+function initSupabase(){
+  const url = localStorage.getItem('sms_sb_url') || DEFAULT_SUPABASE_URL;
+  const key = localStorage.getItem('sms_sb_key') || DEFAULT_SUPABASE_KEY;
+  if(url && key && window.supabase){
+    try{
+      supabaseClient = window.supabase.createClient(url, key);
+      updateCloudStatus(true);
+      document.getElementById('sbUrl').value=url; document.getElementById('sbKey').value=key;
+      autoPullOnLoad();
+    }
+    catch(e){ supabaseClient=null; updateCloudStatus(false); }
+  } else { updateCloudStatus(false); }
+}
+async function autoPullOnLoad(){
+  if(!supabaseClient) return;
+  try{
+    const { data, error } = await supabaseClient.from('sms_students').select('*').eq('id',1).maybeSingle();
+    if(error || !data || !data.data) return; // nothing pushed yet — stay on whatever's local, no error shown
+    appState.students = JSON.parse(data.data);
+    const sessSet = new Set(appState.students.map(s=>s.session).filter(Boolean));
+    sessSet.forEach(s=>{ if(!appState.sessionsList.includes(s)) appState.sessionsList.push(s); });
+    if(sessSet.size>0 && !sessSet.has(appState.currentSession)){ appState.currentSession = sessSet.values().next().value; }
+    saveState();
+    if(typeof renderDataPreview==='function' && document.getElementById('dataPreviewTableWrap')) renderDataPreview();
+    if(typeof renderDashboard==='function' && document.getElementById('dashStatCards')) renderDashboard();
+    if(typeof populateSessionSwitcher==='function') populateSessionSwitcher();
+  }catch(e){ /* silent — first load before anything has ever been pushed */ }
+}
+function saveSupabaseConfig(){
+  const url = document.getElementById('sbUrl').value.trim(), key = document.getElementById('sbKey').value.trim();
+  if(!url || !key){ showToast('Enter both the Supabase URL and anon key.','error'); return; }
+  localStorage.setItem('sms_sb_url', url); localStorage.setItem('sms_sb_key', key);
+  initSupabase(); showToast(supabaseClient ? 'Connected to Supabase.' : 'Could not initialize client.', supabaseClient?'success':'error');
+}
+function disconnectSupabase(){
+  localStorage.removeItem('sms_sb_url'); localStorage.removeItem('sms_sb_key');
+  supabaseClient = null; updateCloudStatus(false);
+  document.getElementById('sbUrl').value=''; document.getElementById('sbKey').value='';
+  showToast('Disconnected from Supabase.');
+}
+async function pushToCloud(){
+  if(!supabaseClient){ showToast('Configure Supabase connection first in Settings.','error'); return; }
+  try{ const payload={ id:1, data: JSON.stringify(appState.students), updated_at:new Date().toISOString() };
+    const { error } = await supabaseClient.from('sms_students').upsert(payload); if(error) throw error;
+    showToast('Student register (all sessions) synced to cloud ✅','success');
+  }catch(e){ showToast('Cloud sync failed: '+e.message,'error'); }
+}
+async function pullFromCloud(){
+  if(!supabaseClient){ showToast('Configure Supabase connection first in Settings.','error'); return; }
+  try{
+    const { data, error } = await supabaseClient.from('sms_students').select('*').eq('id',1).maybeSingle(); if(error) throw error;
+    if(data && data.data){
+      appState.students = JSON.parse(data.data);
+      const sessSet = new Set(appState.students.map(s=>s.session).filter(Boolean));
+      sessSet.forEach(s=>{ if(!appState.sessionsList.includes(s)) appState.sessionsList.push(s); });
+      let switchedSession = null;
+      if(sessSet.size>0 && !sessSet.has(appState.currentSession)){
+        switchedSession = sessSet.values().next().value;
+        appState.currentSession = switchedSession;
+      }
+      saveState(); renderDataPreview(); renderDashboard(); populateSessionSwitcher();
+      showToast(switchedSession
+        ? `Pulled from cloud ✅ — switched active session to "${switchedSession}" since it's what the cloud data was saved under.`
+        : 'Pulled latest student register from cloud ✅', 'success');
+    } else { showToast(`No cloud data found yet for id=1 in sms_students.`,'error'); }
+  }catch(e){ showToast('Cloud pull failed: '+e.message,'error'); }
+}
+async function pushBrandingToCloud(){
+  if(!supabaseClient){ showToast('Configure Supabase connection first in Settings.','error'); return; }
+  try{ const payload={ id:1, data: JSON.stringify(appState.branding), updated_at:new Date().toISOString() };
+    const { error } = await supabaseClient.from('sms_branding').upsert(payload); if(error) throw error;
+    showToast('Branding synced to cloud ✅','success');
+  }catch(e){ showToast('Branding sync failed: '+e.message,'error'); }
+}
+function updateAdminCreds(){
+  const u=document.getElementById('newAdminUser').value.trim(), p=document.getElementById('newAdminPass').value;
+  if(!u || !p){ showToast('Enter both a username and password.','error'); return; }
+  localStorage.setItem('sms_admin_creds', JSON.stringify({user:u, pass:p}));
+  showToast('Administrator credentials updated.','success');
+  document.getElementById('newAdminUser').value=''; document.getElementById('newAdminPass').value='';
+}
+
+/* ============================================================
+   LINKED SESSION FOLDER (File System Access API + IndexedDB)
+   ============================================================ */
+const HANDLE_DB_NAME='sms_handles_db', HANDLE_STORE='handles';
+function idbOpen(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(HANDLE_DB_NAME,1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore(HANDLE_STORE,{keyPath:'session'}); };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+async function idbSaveHandle(session, handle){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(HANDLE_STORE,'readwrite');
+    tx.objectStore(HANDLE_STORE).put({session, handle});
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
+  });
+}
+async function idbGetHandle(session){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(HANDLE_STORE,'readonly');
+    const req = tx.objectStore(HANDLE_STORE).get(session);
+    req.onsuccess=()=>resolve(req.result ? req.result.handle : null);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function idbDeleteHandle(session){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(HANDLE_STORE,'readwrite');
+    tx.objectStore(HANDLE_STORE).delete(session);
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
+  });
+}
+async function renderLinkedFolderStatus(){
+  const wrap = document.getElementById('linkedFolderStatus');
+  if(!wrap) return;
+  if(!window.showDirectoryPicker){
+    wrap.innerHTML = '<div class="legend-note">Folder linking uses the File System Access API, currently supported in Chrome and Edge on desktop. In other browsers, use manual upload above instead.</div>';
+    return;
+  }
+  try{
+    const handle = await idbGetHandle(appState.currentSession);
+    if(handle){
+      wrap.innerHTML = `<div class="legend-note" style="background:var(--teal-pale);color:#07615f;">📁 Linked folder for <b>${escapeHtml(appState.currentSession)}</b>: <b>${escapeHtml(handle.name)}</b></div>
+        <div class="btn-row">
+          <button class="btn btn-teal btn-sm" onclick="loadFromLinkedFolder()">Load CSVs From Linked Folder</button>
+          <button class="btn btn-outline btn-sm" onclick="linkSessionFolder()">Re-link / Change Folder</button>
+          <button class="btn btn-danger btn-sm" onclick="unlinkSessionFolder()">Unlink</button>
+        </div>`;
+    } else {
+      wrap.innerHTML = `<div class="btn-row"><button class="btn btn-outline btn-sm" onclick="linkSessionFolder()">📁 Link a Folder for This Session</button></div>`;
+    }
+  }catch(e){ wrap.innerHTML = '<div class="legend-note">Could not check linked folder status: '+escapeHtml(e.message)+'</div>'; }
+}
+async function linkSessionFolder(){
+  if(!window.showDirectoryPicker){ showToast('Folder linking needs Chrome or Edge on desktop.','error'); return; }
+  try{
+    const handle = await window.showDirectoryPicker({ mode:'read' });
+    await idbSaveHandle(appState.currentSession, handle);
+    showToast(`Folder linked to session ${appState.currentSession}.`,'success');
+    renderLinkedFolderStatus();
+  }catch(e){ if(e.name!=='AbortError') showToast('Could not link folder: '+e.message,'error'); }
+}
+async function unlinkSessionFolder(){
+  await idbDeleteHandle(appState.currentSession);
+  renderLinkedFolderStatus();
+  showToast('Folder unlinked from this session.');
+}
+async function loadFromLinkedFolder(){
+  const handle = await idbGetHandle(appState.currentSession);
+  if(!handle){ showToast('No folder linked for this session yet.','error'); return; }
+  try{
+    let perm = await handle.queryPermission({mode:'read'});
+    if(perm!=='granted') perm = await handle.requestPermission({mode:'read'});
+    if(perm!=='granted'){ showToast('Folder permission was not granted.','error'); return; }
+    const files=[];
+    for await (const [name, entry] of handle.entries()){
+      if(entry.kind==='file' && name.toLowerCase().endsWith('.csv')) files.push(await entry.getFile());
+    }
+    if(files.length===0){ showToast('No CSV files found in the linked folder.','error'); return; }
+    csvQueue = csvQueue.concat(files);
+    renderCsvQueue();
+    showToast(`Loaded ${files.length} CSV file(s) from the linked folder — review the queue, then click "Process Queued Files".`,'success');
+  }catch(e){ showToast('Could not read the linked folder: '+e.message,'error'); }
+}
+
+/* ============================================================
+   GOOGLE DRIVE FOLDER LINKING (alternative to the local folder,
+   for pulling the same class CSVs from any device with internet)
+   ============================================================ */
+let gDriveAccessToken = null;
+let gDriveTokenClient = null;
+function initGoogleDriveClient(){
+  const clientId = localStorage.getItem('sms_gdrive_client_id');
+  if(!clientId || !window.google || !google.accounts || !google.accounts.oauth2) return false;
+  if(gDriveTokenClient) return true;
+  gDriveTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/drive.readonly',
+    callback: (resp)=>{
+      if(resp.error){ showToast('Google Drive connection failed: '+resp.error,'error'); return; }
+      gDriveAccessToken = resp.access_token;
+      showToast('Connected to Google Drive.','success');
+      renderDriveFolderStatus();
+    }
+  });
+  return true;
+}
+function saveGoogleClientId(){
+  const id = document.getElementById('gdriveClientId').value.trim();
+  if(!id){ showToast('Enter your Google OAuth Client ID.','error'); return; }
+  localStorage.setItem('sms_gdrive_client_id', id);
+  gDriveTokenClient = null;
+  const ok = initGoogleDriveClient();
+  showToast(ok ? 'Client ID saved. Click "Connect Google Drive" next.' : 'Client ID saved, but Google\'s sign-in script hasn\'t loaded yet — try again in a moment.', ok?'success':'error');
+  renderDriveFolderStatus();
+}
+function connectGoogleDrive(){
+  if(!initGoogleDriveClient()){ showToast('Save a Google OAuth Client ID first.','error'); return; }
+  gDriveTokenClient.requestAccessToken({ prompt: gDriveAccessToken ? '' : 'consent' });
+}
+function extractDriveFolderId(input){
+  input = (input||'').trim();
+  const m = input.match(/[-\w]{20,}/);
+  return m ? m[0] : input;
+}
+function linkDriveFolder(){
+  const raw = document.getElementById('gdriveFolderInput').value.trim();
+  if(!raw){ showToast('Paste a Drive folder link or ID.','error'); return; }
+  if(!appState.driveFolders) appState.driveFolders = {};
+  appState.driveFolders[appState.currentSession] = extractDriveFolderId(raw);
+  saveState();
+  document.getElementById('gdriveFolderInput').value='';
+  showToast('Drive folder linked to this session.','success');
+  renderDriveFolderStatus();
+}
+function unlinkDriveFolder(){
+  if(appState.driveFolders) delete appState.driveFolders[appState.currentSession];
+  saveState();
+  renderDriveFolderStatus();
+  showToast('Drive folder unlinked from this session.');
+}
+async function fetchPublicCsvLinks(){
+  const raw = document.getElementById('publicCsvLinks').value;
+  const urls = raw.split('\n').map(u=>u.trim()).filter(Boolean);
+  if(urls.length===0){ showToast('Paste at least one public CSV link.','error'); return; }
+  showToast(`Fetching ${urls.length} link(s)…`);
+  let fetched = [], failed = [];
+  for(let i=0;i<urls.length;i++){
+    const url = urls[i];
+    if(/drive\.google\.com\/drive\/folders/.test(url)){ failed.push({url, reason:'This is a Drive folder link, not a CSV file — use the OAuth Drive section below for folders instead.'}); continue; }
+    if(/docs\.google\.com/.test(url)){ failed.push({url, reason:'Google Docs/Sheets links never work here, in any format — Google\'s servers don\'t send the permissions browsers require (CORS), regardless of the link. Use a GitHub raw link instead (see the note above), or the OAuth Drive option below.'}); continue; }
+    try{
+      const resp = await fetch(url);
+      if(!resp.ok){ failed.push({url, reason:'Server responded with HTTP '+resp.status}); continue; }
+      const blob = await resp.blob();
+      let name = `PublicLink-${i+1}.csv`;
+      try{ const u = new URL(url); const seg = u.pathname.split('/').filter(Boolean).pop(); if(seg && seg.length<60) name = seg.replace(/[^\w.\- ]/g,'') + '.csv'; }catch(e){}
+      fetched.push(new File([blob], name, { type:'text/csv' }));
+    }catch(e){ failed.push({url, reason: 'Blocked before a response came back — usually CORS, or the link needs a Google sign-in.'}); }
+  }
+  if(fetched.length){ csvQueue = csvQueue.concat(fetched); renderCsvQueue(); }
+  if(failed.length===0){
+    showToast(`Queued ${fetched.length} file(s) from public links — review the queue, then click "Process Queued Files".`,'success');
+  } else {
+    showToast(`Queued ${fetched.length} file(s); ${failed.length} link(s) failed.`, fetched.length?'':'error');
+    const wrap = document.getElementById('publicCsvLinkErrors');
+    wrap.innerHTML = failed.map(f=>`<div class="legend-note" style="background:var(--danger-bg);color:var(--danger);margin-top:8px;"><b>${escapeHtml(f.url)}</b><br>${escapeHtml(f.reason)}</div>`).join('');
+  }
+}
+async function loadFromDriveFolder(){
+  const folderId = appState.driveFolders && appState.driveFolders[appState.currentSession];
+  if(!folderId){ showToast('No Drive folder linked for this session yet.','error'); return; }
+  if(!gDriveAccessToken){ showToast('Connect Google Drive first.','error'); return; }
+  try{
+    const q = encodeURIComponent(`'${folderId}' in parents and trashed=false and (mimeType='text/csv' or name contains '.csv')`);
+    const listResp = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:'Bearer '+gDriveAccessToken } });
+    if(listResp.status===401){ gDriveAccessToken=null; showToast('Google Drive session expired — click "Connect Google Drive" again.','error'); renderDriveFolderStatus(); return; }
+    if(!listResp.ok) throw new Error('Drive API returned '+listResp.status);
+    const listData = await listResp.json();
+    const files = listData.files || [];
+    if(files.length===0){ showToast('No CSV files found in that Drive folder.','error'); return; }
+    const fetched = [];
+    for(const f of files){
+      const fileResp = await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`, { headers:{ Authorization:'Bearer '+gDriveAccessToken } });
+      if(!fileResp.ok) continue;
+      const blob = await fileResp.blob();
+      fetched.push(new File([blob], f.name, { type:'text/csv' }));
+    }
+    if(fetched.length===0){ showToast('Found files but could not download them.','error'); return; }
+    csvQueue = csvQueue.concat(fetched);
+    renderCsvQueue();
+    showToast(`Loaded ${fetched.length} CSV file(s) from Google Drive — review the queue, then click "Process Queued Files".`,'success');
+  }catch(e){ showToast('Could not load from Google Drive: '+e.message,'error'); }
+}
+function renderDriveFolderStatus(){
+  const wrap = document.getElementById('driveFolderStatus');
+  if(!wrap) return;
+  const clientId = localStorage.getItem('sms_gdrive_client_id');
+  document.getElementById('gdriveClientId').value = clientId || '';
+  const folderId = appState.driveFolders && appState.driveFolders[appState.currentSession];
+  if(!clientId){
+    wrap.innerHTML = '<div class="legend-note">Enter your Google OAuth Client ID above and save it to enable Drive linking.</div>';
+    return;
+  }
+  let html = `<div class="btn-row" style="margin:10px 0;"><button class="btn btn-outline btn-sm" onclick="connectGoogleDrive()">${gDriveAccessToken?'Reconnect':'Connect'} Google Drive</button>${gDriveAccessToken?'<span class="chip on" style="align-self:center;">Connected</span>':''}</div>`;
+  if(folderId){
+    html += `<div class="legend-note" style="background:var(--teal-pale);color:#07615f;">📁 Drive folder linked for <b>${escapeHtml(appState.currentSession)}</b>: <span class="mono">${escapeHtml(folderId)}</span></div>
+      <div class="btn-row"><button class="btn btn-teal btn-sm" onclick="loadFromDriveFolder()">Load CSVs From Drive Folder</button><button class="btn btn-danger btn-sm" onclick="unlinkDriveFolder()">Unlink</button></div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+/* ============================================================
+   DRAG & DROP
+   ============================================================ */
+const dz = document.getElementById('csvDropzone');
+['dragover','dragenter'].forEach(evt=> dz.addEventListener(evt, e=>{ e.preventDefault(); dz.classList.add('drag'); }));
+['dragleave','drop'].forEach(evt=> dz.addEventListener(evt, e=>{ e.preventDefault(); dz.classList.remove('drag'); }));
+dz.addEventListener('drop', e=>{ const files=[...e.dataTransfer.files].filter(f=>f.name.toLowerCase().endsWith('.csv')); if(files.length){ handleCsvFiles(files); } });
+
+/* ============================================================
+   INIT
+   ============================================================ */
+loadState();
+applyPrintMargins();
+applyCardTypography();
+initSupabase();
+setTimeout(initGoogleDriveClient, 1200);
+</script>
+</body>
+</html>
